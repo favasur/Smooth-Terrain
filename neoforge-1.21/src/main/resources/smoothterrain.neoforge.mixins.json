@@ -11,9 +11,6 @@
 	"mixins": [
 	],
 	"client": [
-		"client.BlockRenderDispatcherMixin",
-		"client.PlatformSpecificRenderChunkRebuildTaskMixin",
-		"client.RenderChunkCompileTaskMixin"
 	],
 	"server": [
 	]

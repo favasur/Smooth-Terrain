@@ -45,7 +45,7 @@ public class ClientPlatform implements IClientPlatform {
 
 	@Override
 	public Component clientConfigComponent() {
-		var configFile = new File(ConfigTracker.INSTANCE.getConfigFileName(SmoothTerrain.MOD_ID, ModConfig.Type.CLIENT));
+		var configFile = net.neoforged.fml.loading.FMLPaths.CONFIGDIR.get().resolve(SmoothTerrain.MOD_ID + "-client.toml").toFile();
 		return Component.literal(configFile.getName())
 			.withStyle(ChatFormatting.UNDERLINE)
 			.withStyle(style -> style.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_FILE, configFile.getAbsolutePath())));

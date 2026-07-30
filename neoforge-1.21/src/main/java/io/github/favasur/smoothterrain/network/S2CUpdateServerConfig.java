@@ -8,6 +8,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 import java.io.IOException;
@@ -25,9 +26,9 @@ public record S2CUpdateServerConfig(
 	);
 
 	public static S2CUpdateServerConfig create(ModConfig serverConfig) {
-		assert FMLEnvironment.dist.isDedicatedServer() : "This should not be called on clients because they don't need their logical server config synced (they just reference it directly)";
+		assert FMLEnvironment.dist.isDedicatedServer() : "This should not be called on clients";
 		try {
-			var file = ((com.electronwill.nightconfig.core.file.FileConfig) serverConfig.getConfigData()).getFile();
+			var file = FMLPaths.CONFIGDIR.get().resolve(serverConfig.getFileName()).toFile();
 			var data = Files.readAllBytes(file.toPath());
 			return new S2CUpdateServerConfig(data);
 		} catch (IOException e) {

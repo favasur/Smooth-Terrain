@@ -6,7 +6,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.common.IPlantable;
+import net.minecraft.world.level.block.BushBlock;
 
 public class Platform implements IPlatform {
 	@Override
@@ -16,7 +16,7 @@ public class Platform implements IPlatform {
 
 	@Override
 	public boolean isPlant(BlockState state) {
-		return state.getBlock() instanceof IPlantable;
+		return state.getBlock() instanceof BushBlock;
 	}
 
 	@Override
