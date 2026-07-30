@@ -25,8 +25,7 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:${fabricLoaderVer}"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${rootProject.property('fabric_api_version_1_21')}"
 
-	implementation project(path: ':forge-1.21', configuration: 'namedElements')
-	include project(path: ':forge-1.21', configuration: 'namedElements')
+	// Shared source from forge-1.21 (compiled via sourceSets below, not as dependency)
 
 	modImplementation(include(group: 'io.github.llamalad7', name: 'mixinextras-fabric', version: rootProject.ext.MIXIN_EXTRAS_VERSION))
 	modImplementation(include(group: 'org.beryx', name: 'awt-color-factory', version: rootProject.ext.COLOR_FACTORY_VERSION))

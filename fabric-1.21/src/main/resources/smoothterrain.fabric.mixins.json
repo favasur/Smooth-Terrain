@@ -10,10 +10,7 @@
 	"client": [
 		"client.BlockRenderDispatcherMixin",
 		"client.ClientHandshakePacketListenerImplMixin",
-		"client.ClientPacketListenerMixin",
-		"client.PlatformSpecificRenderChunkRebuildTaskMixin",
-		"client.sodium.ChunkBuilderMeshingTaskMixin",
-		"client.sodium.FluidRendererMixin"
+		"client.ClientPacketListenerMixin"
 	],
 	"server": [
 	],

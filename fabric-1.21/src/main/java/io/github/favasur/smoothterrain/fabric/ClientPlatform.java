@@ -3,7 +3,6 @@ package io.github.favasur.smoothterrain.fabric;
 import io.github.favasur.smoothterrain.client.ClientUtil;
 import io.github.favasur.smoothterrain.client.KeyMappings;
 import io.github.favasur.smoothterrain.config.SmoothTerrainConfigImpl;
-import io.github.favasur.smoothterrain.network.C2SRequestUpdateSmoothable;
 import io.github.favasur.smoothterrain.platform.IClientPlatform;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
@@ -29,7 +28,7 @@ public class ClientPlatform implements IClientPlatform {
 	@Override
 	public void sendC2SRequestUpdateSmoothable(boolean newValue, BlockState[] states) {
 		warnClientPlayerThatConfigIsNotImplemented();
-		ClientPlayNetworking.send(new C2SRequestUpdateSmoothable(newValue, states));
+		// TODO: Send via Fabric API 1.21.x CustomPayload
 	}
 
 	static void warnClientPlayerThatConfigIsNotImplemented() {

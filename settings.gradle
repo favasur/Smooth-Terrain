@@ -31,7 +31,7 @@ include("forge-1.21")
 include("neoforge-1.21")
 
 // === Awaiting dependency resolution ===
-//include("fabric-1.21")     // Requires Fabric Loom + Fabric API setup
+include("fabric-1.21")
 //include("forge-26.2")
 //include("neoforge-26.2")
 //include("fabric-26.2")
