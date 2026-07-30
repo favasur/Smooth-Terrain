@@ -1,30 +1,57 @@
 package io.github.favasur.smoothterrain.client.render;
 
+import io.github.favasur.smoothterrain.client.render.struct.Color;
+import io.github.favasur.smoothterrain.client.render.struct.FaceLight;
+import io.github.favasur.smoothterrain.client.render.struct.Texture;
+import io.github.favasur.smoothterrain.hooks.trait.ISmoothTerrainChunkSectionRenderBuilderSodium;
+import io.github.favasur.smoothterrain.util.Face;
+import io.github.favasur.smoothterrain.util.Vec;
+import io.github.favasur.smoothterrain.client.render.MeshRenderer.MutableObjects;
+import io.github.favasur.smoothterrain.client.render.MeshRenderer.FaceInfo;
+import io.github.favasur.smoothterrain.client.render.MeshRenderer.ISmoothTerrainAreaRenderer;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.client.model.data.ModelData;
+
+import org.embeddedt.embeddium.api.render.chunk.BlockRenderContext;
+import org.embeddedt.embeddium.api.util.ColorABGR;
+import org.embeddedt.embeddium.impl.model.quad.properties.ModelQuadFacing;
+import org.embeddedt.embeddium.impl.render.chunk.compile.ChunkBuildBuffers;
+import org.embeddedt.embeddium.impl.render.chunk.compile.buffers.ChunkModelBuilder;
+import org.embeddedt.embeddium.impl.render.chunk.compile.pipeline.BlockRenderCache;
+import org.embeddedt.embeddium.impl.render.chunk.terrain.material.DefaultMaterials;
+import org.embeddedt.embeddium.impl.render.chunk.terrain.material.Material;
+import org.embeddedt.embeddium.impl.render.chunk.vertex.builder.ChunkMeshBufferBuilder;
+import org.embeddedt.embeddium.impl.render.chunk.vertex.format.ChunkVertexEncoder;
+
 /**
- * Sodium/Embeddium compatibility renderer — NEEDS MANUAL PORT.
- *
- * Sodium 0.6 (Embeddium 1.21.x) completely rewrote its chunk rendering pipeline.
- * The old classes (ChunkBuildBuffers, BlockRenderContext, ChunkVertexEncoder, etc.)
- * no longer exist. The Sodium API now uses TerrainRenderContext, ChunkBuildContext,
- * and a different vertex writing approach.
- *
- * This file is preserved as a reference. When someone ports it:
- * - Dependencies are already set up in build.gradle (compileOnly embeddium 1.21.x)
- * - Key areas to update: renderChunk entry point, vertex buffer writing, model data
- *
- * Original code below (commented out):
- *
- * import net.caffeinemc.mods.sodium.client.render.chunk.compile.*
- * import net.caffeinemc.mods.sodium.client.render.chunk.compile.pipeline.*
- * etc.
+ * Sodium/Embeddium compatibility renderer for NeoForge 1.21.x.
+ * <p>
+ * Ported from the old Sodium 0.5 API ({@code me.jellysquid.mods.sodium.*}) to
+ * the Embeddium 1.21.1 API ({@code org.embeddedt.embeddium.*}).
+ * <p>
+ * Key changes from the old API:
+ * <ul>
+ *   <li>All packages renamed from {@code me.jellysquid.mods.sodium.*} to
+ *       {@code org.embeddedt.embeddium.*}</li>
+ *   <li>{@link BlockRenderContext#origin()} now returns immutable {@code Vector3fc} —
+ *       block offset uses {@link BlockRenderContext#stack()} translate instead</li>
+ *   <li>{@link BlockRenderContext#update} now takes typed {@link ModelData} instead of
+ *       {@code Object}</li>
+ *   <li>Getter methods replace direct field access on BlockRenderContext</li>
+ * </ul>
  */
 public final class NeoForgeSodiumRenderer {
 
-	// TODO: Port to Sodium 0.6 API (Embeddium 1.21.x)
-	// The entire chunk rendering pipeline was rewritten.
-	// See: https://github.com/CaffeineMC/sodium-fabric/tree/1.21.x
-
-	/*
 	public static void renderChunk(
 		ISmoothTerrainChunkSectionRenderBuilderSodium task,
 		RandomSource random,
@@ -76,31 +103,27 @@ public final class NeoForgeSodiumRenderer {
 				}
 				@Override
 				public void block(BlockState stateIn, BlockPos worldPosIn, float relativeX, float relativeY, float relativeZ) {
-					var oldX = context.origin().x();
-					var oldY = context.origin().y();
-					var oldZ = context.origin().z();
-					{
+					// Embeddium 1.21.1: origin() is immutable, use PoseStack for offset
+					context.stack().pushPose();
+					try {
+						context.stack().translate(relativeX, relativeY, relativeZ);
 						renderInBlockLayers(
 							task, buffers, cache, modelOffset, context,
 							stateIn, worldPosIn,
 							(state, worldPos, model, seed, modelData, layer, material, buffer) -> {
-								((Vector3f) context.origin()).set(
-									oldX + relativeX,
-									oldY + relativeY,
-									oldZ + relativeZ
-								);
 								cache.getBlockRenderer().renderModel(context, buffers);
 							}
 						);
+					} finally {
+						context.stack().popPose();
 					}
-					((Vector3f) context.origin()).set(oldX, oldY, oldZ);
 				}
 			}
 		);
 	}
 
-	interface RenderInLayer {
-		void render(BlockState state, BlockPos worldPos, BakedModel model, long seed, Object modelData, RenderType layer, Material material, ChunkModelBuilder buffer);
+	public interface RenderInLayer {
+		void render(BlockState state, BlockPos worldPos, BakedModel model, long seed, ModelData modelData, RenderType layer, Material material, ChunkModelBuilder buffer);
 	}
 
 	static void renderInBlockLayers(
@@ -113,8 +136,7 @@ public final class NeoForgeSodiumRenderer {
 	) {
 		var model = cache.getBlockModels().getBlockModel(state);
 		var seed = state.getSeed(worldPos);
-		// NeoForge 1.21: ModelData approach differs from Forge 1.20
-		Object modelData = null; // TODO: Update for NeoForge model data API
+		ModelData modelData = (ModelData) task.noCubes$getModelData(worldPos);
 		var layers = ItemBlockRenderTypes.getRenderLayers(state);
 		for (var layer : layers) {
 			context.update(worldPos, modelOffset, state, model, seed, modelData, layer);
@@ -124,7 +146,7 @@ public final class NeoForgeSodiumRenderer {
 		}
 	}
 
-	interface QuadConsumer {
+	public interface QuadConsumer {
 		void accept(RenderType layer, Material material, ChunkModelBuilder buffer, BakedQuad quad, Color color, boolean emissive);
 	}
 
@@ -147,7 +169,7 @@ public final class NeoForgeSodiumRenderer {
 					(state1) -> cache.getBlockModels().getBlockModel(state1),
 					(state1, model1, direction1) -> {
 						random.setSeed(seed);
-						return model1.getQuads(state1, direction1, random);
+						return model1.getQuads(state1, direction1, random, modelData, layer);
 					},
 					(state1, quad) -> {
 						var color = colorSupplier.apply(state1, worldPos, quad);
@@ -220,7 +242,7 @@ public final class NeoForgeSodiumRenderer {
 		);
 		if (doubleSided) {
 			quad(
-				vertexBuffer, material, vertices, context,
+				vertexBuffer, material, vertices, context, false,
 				vec0.x, vec0.y, vec0.z, color0.red, color0.green, color0.blue, color0.alpha, u0, v0, overlay0, light0, normal0.x, normal0.y, normal0.z,
 				vec3.x, vec3.y, vec3.z, color3.red, color3.green, color3.blue, color3.alpha, u3, v3, overlay3, light3, normal3.x, normal3.y, normal3.z,
 				vec2.x, vec2.y, vec2.z, color2.red, color2.green, color2.blue, color2.alpha, u2, v2, overlay2, light2, normal2.x, normal2.y, normal2.z,
@@ -231,7 +253,7 @@ public final class NeoForgeSodiumRenderer {
 
 	static void quad(
 		ChunkMeshBufferBuilder vertexBuffer, Material material,
-		ChunkVertexEncoder.Vertex[] vertices, BlockRenderContext context,
+		ChunkVertexEncoder.Vertex[] vertices, BlockRenderContext context, boolean doubleSided,
 		float v0x, float v0y, float v0z, float red0, float green0, float blue0, float alpha0, float u0, float v0, int overlay0, int light0, float n0x, float n0y, float n0z,
 		float v1x, float v1y, float v1z, float red1, float green1, float blue1, float alpha1, float u1, float v1, int overlay1, int light1, float n1x, float n1y, float n1z,
 		float v2x, float v2y, float v2z, float red2, float green2, float blue2, float alpha2, float u2, float v2, int overlay2, int light2, float n2x, float n2y, float n2z,
@@ -260,14 +282,5 @@ public final class NeoForgeSodiumRenderer {
 		vertex.u = u;
 		vertex.v = v;
 		vertex.light = light;
-	}
-	*/
-
-	// Stub entry point so callers don't crash at runtime
-	public static void renderChunk(
-		Object task, Object random, Object buffers, Object cache,
-		Object chunkPos, Object modelOffset, Object context
-	) {
-		// Sodium 0.6 port pending — see above
 	}
 }
