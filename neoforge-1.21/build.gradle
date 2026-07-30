@@ -32,8 +32,8 @@ dependencies {
 	testImplementation(compileOnly(project(':forge-1.21')))
 	jarJar(implementation(group: 'io.github.llamalad7', name: 'mixinextras-neoforge', version: rootProject.ext.MIXIN_EXTRAS_VERSION))
 	jarJar(implementation(group: 'org.beryx', name: 'awt-color-factory', version: rootProject.ext.COLOR_FACTORY_VERSION))
-	// Embeddium/Sodium compatibility - add when the correct version is available
-	// compileOnly 'curse.maven:Embeddium-908741:5560980'
+	// Embeddium/Sodium compatibility for Sodium rendering pipeline
+	compileOnly 'maven.modrinth:embeddium:1.0.11+mc1.21.1-neoforge'
 }
 
 tasks.withType(JavaCompile).configureEach {
