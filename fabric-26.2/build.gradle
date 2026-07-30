@@ -1,0 +1,37 @@
+plugins {
+	id 'idea'
+	id 'maven-publish'
+	id 'fabric-loom'
+}
+base {
+	archivesName = "${mod_id}-fabric-26.2"
+}
+def mcVersion = rootProject.property('minecraft_version_26_2')
+def fabricLoaderVer = rootProject.property('fabric_loader_version_26_2')
+
+loom {
+	mixin {
+		defaultRefmapName = "${mod_id}.refmap.json"
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${mcVersion}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${fabricLoaderVer}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${rootProject.property('fabric_api_version_26_2')}"
+
+	implementation project(path: ':forge-26.2', configuration: 'namedElements')
+	include project(path: ':forge-26.2', configuration: 'namedElements')
+
+	modImplementation(include(group: 'io.github.llamalad7', name: 'mixinextras-fabric', version: rootProject.ext.MIXIN_EXTRAS_VERSION))
+	modImplementation(include(group: 'org.beryx', name: 'awt-color-factory', version: rootProject.ext.COLOR_FACTORY_VERSION))
+}
+
+tasks.withType(JavaCompile).configureEach {
+	source(project(":forge-26.2").sourceSets.main.allSource)
+}
+
+processResources {
+	from project(":forge-26.2").sourceSets.main.resources
+}

@@ -1,0 +1,157 @@
+plugins {
+	id 'net.neoforged.moddev' version '2.0.74' apply(false)
+	id 'net.minecraftforge.gradle' version '[6.0,6.2)' apply(false)
+	id 'fabric-loom' version '1.6-SNAPSHOT' apply(false)
+	id 'org.spongepowered.gradle.vanilla' version '0.2.1-SNAPSHOT' apply(false)
+	id('org.spongepowered.mixin') version '0.7-SNAPSHOT' apply(false)
+}
+
+String execCmd(List<String> params, String fallback) {
+	def stdout = new ByteArrayOutputStream()
+	def result = exec {
+		commandLine params
+		standardOutput = stdout
+	}
+	return result.getExitValue() != 0 ? fallback : stdout.toString().trim()
+}
+
+group = mod_group
+
+ext {
+	COLOR_FACTORY_VERSION = '1.0.2'
+	MIXIN_EXTRAS_VERSION = '0.3.5'
+}
+
+// Helper to get version-specific property
+def vprop(String projectName, String prop) {
+	def versionSuffix = projectName.contains('26.2') ? '26_2' : '1_21'
+	def key = "${prop}_${versionSuffix}"
+	return rootProject.hasProperty(key) ? rootProject.property(key) : null
+}
+
+subprojects {
+	apply plugin: 'java'
+
+	def mcVersion = vprop(project.name, 'minecraft_version') ?: '1.21.1'
+	version = "${mcVersion}-${mod_version}-${execCmd(['git', 'rev-parse', '--short', 'HEAD'], 'nogit')}"
+	group = rootProject.group
+
+	java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+	java.withSourcesJar()
+	java.withJavadocJar()
+
+	dependencies {
+		compileOnly 'org.jetbrains:annotations:24.1.0'
+		testImplementation 'org.mockito:mockito-core:5.10.0'
+		testImplementation 'junit:junit:4.13.2'
+		testImplementation group: 'org.beryx', name: 'awt-color-factory', version: rootProject.ext.COLOR_FACTORY_VERSION
+	}
+
+	jar {
+		archiveClassifier.set('dev')
+		from(rootProject.file('LICENSE')) {
+			rename { "${it}_${mod_name}" }
+		}
+		manifest {
+			attributes([
+				'Specification-Title'     : mod_name,
+				'Specification-Vendor'    : mod_authors,
+				'Specification-Version'   : project.jar.archiveVersion,
+				'Implementation-Title'    : project.name,
+				'Implementation-Version'  : project.jar.archiveVersion,
+				'Implementation-Vendor'   : mod_authors,
+				'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+				'Timestamp'               : System.currentTimeMillis(),
+				'Built-On-Java'           : "${System.getProperty('java.vm.version')} (${System.getProperty('java.vm.vendor')})",
+				'Built-On-Minecraft'      : mcVersion,
+				'Main-Class'              : 'io.github.favasur.smoothterrain.DoNotRunThisFromTheConsoleDialog',
+				'FMLModType'              : 'GAMELIBRARY',
+			])
+		}
+	}
+
+	sourcesJar {
+		archiveClassifier.set('sources')
+		from(rootProject.file('LICENSE')) {
+			rename { "${it}_${mod_name}" }
+		}
+	}
+
+	javadocJar {
+		archiveClassifier.set('javadoc')
+	}
+
+	javadoc {
+		options.tags = [
+			'apiNote:a:API Note:',
+			'implSpec:a:Implementation Requirements:',
+			'implNote:a:Implementation Note:',
+		]
+		options.addBooleanOption('Xdoclint:-missing', true)
+	}
+
+	repositories {
+		mavenCentral()
+		maven {
+			name = 'Sponge / Mixin'
+			url = 'https://repo.spongepowered.org/repository/maven-public/'
+		}
+		maven {
+			url "https://www.cursemaven.com"
+			content {
+				includeGroup "curse.maven"
+			}
+		}
+		maven {
+			name = 'Modrinth'
+			url = 'https://api.modrinth.com/maven'
+			content {
+				includeGroup 'maven.modrinth'
+			}
+		}
+	}
+
+	tasks.withType(JavaCompile).configureEach {
+		it.options.encoding = 'UTF-8'
+		it.options.getRelease().set(21)
+	}
+
+	processResources {
+		def ncVersion = mcVersion
+		def neoforgeVer = vprop(project.name, 'neoforge_version') ?: '0'
+		def forgeVer = vprop(project.name, 'forge_version') ?: '0'
+		def fabricLoaderVer = vprop(project.name, 'fabric_loader_version') ?: '0'
+		def nfLoaderRange = vprop(project.name, 'neoforge_loader_version_range') ?: '[0,)'
+		def nfVersionRange = vprop(project.name, 'neoforge_version_range') ?: '[0,)'
+		def fLoaderRange = vprop(project.name, 'forge_loader_version_range') ?: '[0,)'
+		def fVersionRange = vprop(project.name, 'forge_version_range') ?: '[0,)'
+
+		def expandProps = [
+			"minecraft_version"         : ncVersion,
+			"neoforge_version"          : neoforgeVer,
+			"forge_version"             : forgeVer,
+			"fabric_loader_version"     : fabricLoaderVer,
+			"neoforge_loader_version_range": nfLoaderRange,
+			"neoforge_version_range"    : nfVersionRange,
+			"forge_loader_version_range" : fLoaderRange,
+			"forge_version_range"       : fVersionRange,
+			"minecraft_version_range"   : "[${ncVersion}]",
+			"mod_name"                  : mod_name,
+			"mod_id"                    : mod_id,
+			"mod_version"               : version,
+			"mod_group"                 : project.group,
+			"mod_authors"               : mod_authors,
+			"mod_license"               : mod_license,
+			"mod_issue_tracker_url"     : mod_issue_tracker_url,
+			"mod_update_json_url"       : mod_update_json_url,
+			"mod_homepage_url"          : mod_homepage_url,
+			"mod_credits"               : mod_credits,
+			"mod_description"           : mod_description,
+		]
+
+		filesMatching(['pack.mcmeta', 'fabric.mod.json', 'META-INF/neoforge.mods.toml', 'META-INF/mods.toml', '*.mixins.json']) {
+			expand expandProps
+		}
+		inputs.properties(expandProps)
+	}
+}

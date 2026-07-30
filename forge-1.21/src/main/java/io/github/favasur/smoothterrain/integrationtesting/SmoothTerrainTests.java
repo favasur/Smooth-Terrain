@@ -1,0 +1,119 @@
+package io.github.favasur.smoothterrain.integrationtesting;
+
+import io.github.favasur.smoothterrain.SmoothTerrain;
+import io.github.favasur.smoothterrain.config.SmoothTerrainConfig.Server.MesherType;
+import io.github.favasur.smoothterrain.util.Area;
+import io.github.favasur.smoothterrain.util.Face;
+import io.github.favasur.smoothterrain.util.ModUtil;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.BlockPos.MutableBlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+
+import java.util.Arrays;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+/**
+ * Integration tests
+ *
+ * @author Cadiboo
+ */
+final class SmoothTerrainTests {
+
+	record Test(String name, Runnable action) {}
+
+	static Test[] createTests(Supplier<Stream<Block>> getAllBlocks) {
+		return new Test[]{
+//			test("the version in mods.toml should have been replaced by gradle", () -> assertFalse(0 == ModList.get().getModFileById(SmoothTerrain.MOD_ID).getMods().get(0).getVersion().getMajorVersion())),
+			test("stone should be smoothable", () -> assertTrue(SmoothTerrain.smoothableHandler.isSmoothable(Blocks.STONE.defaultBlockState()))),
+			test("dirt should be smoothable", () -> assertTrue(SmoothTerrain.smoothableHandler.isSmoothable(Blocks.DIRT.defaultBlockState()))),
+			test("air should not be smoothable", () -> assertFalse(SmoothTerrain.smoothableHandler.isSmoothable(Blocks.AIR.defaultBlockState()))),
+			test("removing smoothable should work", () -> {
+				var dirt = Blocks.DIRT.defaultBlockState();
+				var oldValue = SmoothTerrain.smoothableHandler.isSmoothable(dirt);
+				SmoothTerrain.smoothableHandler.setSmoothable(false, dirt);
+				assertFalse(SmoothTerrain.smoothableHandler.isSmoothable(dirt));
+				if (oldValue)
+					SmoothTerrain.smoothableHandler.setSmoothable(true, dirt);
+			}),
+			test("adding then removing lots of smoothables at once should work", () -> {
+				var states = getAllBlocks.get()
+					.skip(20) // Skip air, stone, dirt etc. which we test above
+					.limit(1000)
+					.map(Block::defaultBlockState)
+					.toArray(BlockState[]::new);
+
+				ModUtil.platform.updateServerConfigSmoothable(true, states);
+				assertTrue(Arrays.stream(states).allMatch(SmoothTerrain.smoothableHandler::isSmoothable));
+
+				ModUtil.platform.updateServerConfigSmoothable(false, states);
+				assertTrue(Arrays.stream(states).noneMatch(SmoothTerrain.smoothableHandler::isSmoothable));
+			}),
+			test("area sanity check", SmoothTerrainTests::areaSanityCheck),
+			test("mesher sanity check", SmoothTerrainTests::mesherSanityCheck),
+		};
+	}
+
+	private static Test test(String name, Runnable action) {
+		return new Test(name, action);
+	}
+
+	private static void areaSanityCheck() {
+		BlockPos start = new BlockPos(100, 50, 25);
+		assertTrue(0 == new Area(null, start, new BlockPos(0, 0, 0)).numBlocks());
+		assertTrue(1 == new Area(null, start, new BlockPos(1, 1, 1)).numBlocks());
+	}
+
+	private static void mesherSanityCheck() {
+		Predicate<BlockState> isSmoothable = $ -> $ == Blocks.STONE.defaultBlockState();
+
+		var start = new BlockPos(100, 50, 25);
+		var area = new Area(null, start, new BlockPos(5, 5, 5)) {
+			@Override
+			public BlockState[] getAndCacheBlocks() {
+				BlockState[] states = new BlockState[numBlocks()];
+				// Worst case for meshers: every 2nd block is smooth (a checkerboard pattern)
+				for (int i = 0; i < states.length; i++)
+					states[i] = i % 2 == 0 ? Blocks.STONE.defaultBlockState() : Blocks.AIR.defaultBlockState();
+				return states;
+			}
+
+			@Override
+			public void close() {
+				// No-op
+			}
+		};
+		for (var mesher : MesherType.values()) {
+			try {
+				mesher.instance.generateGeometry(area, isSmoothable, SmoothTerrainTests::checkAndMutate);
+			} catch (Exception e) {
+				throw new RuntimeException("Error with mesher" + mesher.name(), e);
+			}
+		}
+	}
+
+	private static boolean checkAndMutate(MutableBlockPos pos, Face face) {
+		assertFalse(pos.getX() < 0);
+		assertFalse(pos.getX() >= 5);
+		pos.move(1000, 1000, 1000);
+
+		assertFalse(face.v0.x < -1);
+		assertFalse(face.v0.x >= 6);
+		face.v0.x += 10000;
+		return true;
+	}
+
+	private static void assertTrue(boolean value) {
+		if (!value)
+			throw new AssertionError("Expected the passed in value to be true");
+	}
+
+	private static void assertFalse(boolean value) {
+		if (value)
+			throw new AssertionError("Expected the passed in value to be false");
+	}
+
+}

@@ -1,0 +1,31 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "io.github.favasur.smoothterrain.mixin",
+	"refmap": "${mod_id}.refmap.json",
+	"compatibilityLevel": "JAVA_17",
+	"plugin": "io.github.favasur.smoothterrain.mixin.SmoothTerrainMixinPlugin",
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"mixins": [
+		"BlockCollisionsMixin",
+		"BlockMixin",
+		"BlockStateBaseMixin",
+		"EntityMixin",
+		"LevelMixin",
+		"PlayerMixin"
+	],
+	"client": [
+		"client.LevelRendererMixin",
+		"client.LiquidBlockRendererMixin",
+		"client.NonSodiumLevelRendererMixin",
+		"client.RenderChunkMixin",
+		"client.RenderChunkRebuildTaskMixin",
+		"client.RenderChunkRegionMixin",
+		"client.ScreenEffectRendererMixin"
+	],
+	"server": [
+	]
+}
+

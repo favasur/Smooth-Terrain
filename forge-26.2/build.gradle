@@ -1,0 +1,34 @@
+plugins {
+	id 'idea'
+	id 'java'
+	id 'maven-publish'
+	id 'org.spongepowered.gradle.vanilla'
+}
+base {
+	archivesName = "${mod_id}-forge-26.2"
+}
+def mcVersion = rootProject.property('minecraft_version_26_2')
+minecraft {
+	version(mcVersion)
+}
+
+dependencies {
+	compileOnly(group: 'org.spongepowered', name: 'mixin', version: '0.8.5')
+	compileOnly(group: 'org.ow2.asm', name: 'asm-tree', version: '9.7')
+	compileOnly(group: 'io.github.llamalad7', name: 'mixinextras-common', version: rootProject.ext.MIXIN_EXTRAS_VERSION)
+	compileOnly(group: 'org.beryx', name: 'awt-color-factory', version: rootProject.ext.COLOR_FACTORY_VERSION)
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			artifactId base.archivesName.get()
+			from components.java
+		}
+	}
+	repositories {
+		maven {
+			url "file://" + System.getenv("local_maven")
+		}
+	}
+}

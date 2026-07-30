@@ -1,0 +1,20 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "io.github.favasur.smoothterrain.mixin",
+	"refmap": "${mod_id}.refmap.json",
+	"compatibilityLevel": "JAVA_21",
+	"plugin": "io.github.favasur.smoothterrain.mixin.SmoothTerrainMixinPlugin",
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"mixins": [
+	],
+	"client": [
+		"client.BlockRenderDispatcherMixin",
+		"client.PlatformSpecificRenderChunkRebuildTaskMixin",
+		"client.RenderChunkCompileTaskMixin"
+	],
+	"server": [
+	]
+}

@@ -1,0 +1,65 @@
+plugins {
+	id 'idea'
+	id 'maven-publish'
+	id 'net.neoforged.moddev'
+}
+base {
+	archivesName = "${mod_id}-neoforge-1.21"
+}
+
+neoForge {
+	version = rootProject.property('neoforge_version_1_21')
+
+	mods {
+		"${mod_id}" {
+			sourceSet sourceSets.main
+			sourceSet project(":forge-1.21").sourceSets.main
+		}
+	}
+
+	runs {
+		client {}
+		server {}
+		configureEach {
+			systemProperty 'mixin.debug.verbose', 'true'
+			systemProperty 'mixin.debug.export', 'true'
+			jvmArgument '-ea'
+		}
+	}
+}
+
+dependencies {
+	testImplementation(compileOnly(project(':forge-1.21')))
+	jarJar(implementation(group: 'io.github.llamalad7', name: 'mixinextras-neoforge', version: rootProject.ext.MIXIN_EXTRAS_VERSION))
+	jarJar(implementation(group: 'org.beryx', name: 'awt-color-factory', version: rootProject.ext.COLOR_FACTORY_VERSION))
+	// Embeddium/Sodium compatibility - add when the correct version is available
+	// compileOnly 'curse.maven:Embeddium-908741:5560980'
+}
+
+tasks.withType(JavaCompile).configureEach {
+	source(project(":forge-1.21").sourceSets.main.allSource)
+}
+tasks.withType(Javadoc).configureEach {
+	source(project(":forge-1.21").sourceSets.main.allJava)
+}
+tasks.named("sourcesJar", Jar) {
+	from(project(":forge-1.21").sourceSets.main.allSource)
+}
+
+processResources {
+	from project(":forge-1.21").sourceSets.main.resources
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			artifactId base.archivesName.get()
+			from components.java
+		}
+	}
+	repositories {
+		maven {
+			url "file://" + System.getenv("local_maven")
+		}
+	}
+}

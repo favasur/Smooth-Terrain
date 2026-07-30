@@ -1,0 +1,32 @@
+{
+	"smoothterrain.keycategory": "SmoothTerrain",
+	"smoothterrain.key.toggleVisuals": "Toggle rendering",
+	"smoothterrain.key.toggleSmoothableBlockType": "Toggle block smoothness",
+	"smoothterrain.key.toggleSmoothableBlockState": "Toggle specific block state smoothness",
+
+	"smoothterrain.config.infoMessage": "SmoothTerrain info message",
+	"smoothterrain.config.render": "SmoothTerrain rendering",
+	"smoothterrain.config.selectionBoxColor": "Selection box color",
+	"smoothterrain.config.betterGrassSides": "Better grass sides",
+	"smoothterrain.config.moreSnow": "More snow",
+	"smoothterrain.config.fixPlantHeight": "Fix plant height",
+	"smoothterrain.config.grassTufts": "Grass tufts",
+	"smoothterrain.config.debugEnabled": "Debug mode",
+
+	"smoothterrain.config.smoothableWhitelist": "Whitelist of smoothable blocks",
+	"smoothterrain.config.smoothableBlacklist": "Blacklist of non-smoothable blocks",
+	"smoothterrain.config.meshGenerator": "Mesh generator",
+	"smoothterrain.config.collisionsEnabled": "Custom collisions",
+	"smoothterrain.config.forceVisuals": "Force custom rendering for players",
+	"smoothterrain.config.extendFluidsRange": "Extended fluids range",
+	"smoothterrain.config.oldSmoothTerrainSlopes": "OldSmoothTerrain slopes",
+	"smoothterrain.config.oldSmoothTerrainInFluids": "OldSmoothTerrain in fluids",
+	"smoothterrain.config.oldSmoothTerrainRoughness": "OldSmoothTerrain roughness",
+
+	"smoothterrain.command.changeSmoothableNoPermission": "Unable to change block smoothness; no permission",
+
+	"smoothterrain.notification.infoMessage": "SmoothTerrain is installed, press %1$s while looking at a block to change if it is smooth\nYou can disable this message by changing '%2$s' to 'false' in your client config (%3$s)",
+	"smoothterrain.notification.notInstalledOnServer": "You have connected to a server that does not have SmoothTerrain installed\nYou can still play but SmoothTerrain' custom collisions cannot work properly and have been temporarily disabled\nAny changes to smooth blocks you make by pressing %1$s while looking at a block will not be saved",
+	"smoothterrain.notification.visualsForcedByServer": "This server forces SmoothTerrain' visuals to be enabled at all times while playing to ensure a 'proper' player experience",
+	"smoothterrain.notification.visualsDisabled": "You have turned off SmoothTerrain' visuals, press '%1$s' to turn them on again or set '%2$s' to 'true' in your client config (%3$s)"
+}

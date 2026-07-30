@@ -1,0 +1,107 @@
+name: Build
+on:
+  push:
+    branches: ['*']
+  workflow_dispatch: {}
+jobs:
+  build-fabric:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+      - name: Build and check
+        run: ./gradlew :fabric:build --stacktrace
+      - name: Archive development jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: Development jars inside (fabric)
+          path: |
+            fabric/build/devlibs/*.jar
+          if-no-files-found: error
+      - name: Archive playable jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: Playable mod jar inside (fabric)
+          path: |
+            fabric/build/libs/*.jar
+          if-no-files-found: error
+      - name: Integration tests
+        run: ./gradlew :fabric:runGameTestServer --stacktrace
+      - name: Publish
+        uses: Kir-Antipov/mc-publish@v3.3
+        if: "contains(github.event.head_commit.message, '[ci publish]')"
+        with:
+          version-type: beta
+          files: fabric/build/libs/!(*-@(sources|dev|dev-shadow|javadoc).jar)
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-commitish: ${{ github.sha }}
+          github-generate-changelog: true
+          changelog: https://github.com/Cadiboo/NoCubes/releases
+          curseforge-id: 309664
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          modrinth-id: w3bbwFYU
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          # Empty name so CurseForge and Modrinth autogenerate it https://github.com/Kir-Antipov/mc-publish/blob/995edadc13559a8b28d0b7e6571229f067ec7659/README.md?plain=1#L377
+          name: ''
+  build-forge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+      - name: Build and check
+        run: ./gradlew :forge:build --stacktrace
+      - name: Archive development jars
+        uses: actions/upload-artifact@v4
+        with:
+          name: Development jars inside (forge)
+          path: |
+            forge/build/libs/*-dev.jar
+            forge/build/libs/*-sources.jar
+            forge/build/libs/*-javadoc.jar
+          if-no-files-found: error
+      - name: Archive playable jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: Playable mod jar inside (forge)
+          path: |
+            forge/build/libs/*.jar
+            !forge/build/libs/*-dev.jar
+            !forge/build/libs/*-sources.jar
+            !forge/build/libs/*-javadoc.jar
+          if-no-files-found: error
+      - name: Integration tests
+        run: ./gradlew :forge:runGameTestServer --stacktrace
+      - name: Publish
+        uses: Kir-Antipov/mc-publish@v3.3
+        if: "contains(github.event.head_commit.message, '[ci publish]')"
+        with:
+          version-type: beta
+          files: forge/build/libs/!(*-@(sources|dev|dev-shadow|javadoc).jar)
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-commitish: ${{ github.sha }}
+          github-generate-changelog: true
+          changelog: https://github.com/Cadiboo/NoCubes/releases
+          curseforge-id: 309664
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+          modrinth-id: w3bbwFYU
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          # Empty name so CurseForge and Modrinth autogenerate it https://github.com/Kir-Antipov/mc-publish/blob/995edadc13559a8b28d0b7e6571229f067ec7659/README.md?plain=1#L377
+          name: ''

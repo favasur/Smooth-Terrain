@@ -1,0 +1,37 @@
+{
+	"schemaVersion": 1,
+	"id": "${mod_id}",
+	"version": "${mod_version}",
+	"name": "${mod_name}",
+	"description": "${mod_description}",
+	"authors": [
+		"${mod_authors}"
+	],
+	"contact": {
+		"homepage": "${mod_homepage_url}",
+		"issues": "${mod_issue_tracker_url}"
+	},
+	"license": "${mod_license}",
+	"icon": "${mod_id}.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"io.github.favasur.smoothterrain.fabric.Init"
+		],
+		"client": [
+			"io.github.favasur.smoothterrain.fabric.ClientInit"
+		],
+		"fabric-gametest": [
+			"io.github.favasur.smoothterrain.fabric.GameTests"
+		]
+	},
+	"mixins": [
+		"${mod_id}.mixins.json",
+		"${mod_id}.fabric.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.7.4",
+		"fabric-api": "*",
+		"minecraft": "${minecraft_version}"
+	}
+}
