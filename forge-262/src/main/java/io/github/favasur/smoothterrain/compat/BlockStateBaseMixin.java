@@ -1,0 +1,141 @@
+package io.github.favasur.smoothterrain.compat;
+
+import io.github.favasur.smoothterrain.collision.CollisionHandler;
+import io.github.favasur.smoothterrain.collision.MeshCollisionScope;
+import io.github.favasur.smoothterrain.hooks.Hooks;
+import io.github.favasur.smoothterrain.hooks.trait.ISmoothTerrainBlockState;
+import net.minecraft.core.BlockPos;
+
+import net.minecraft.world.level.BlockCollisions;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import static net.minecraft.world.level.block.state.BlockBehaviour.BlockStateBase;
+
+@Mixin(BlockStateBase.class)
+public abstract class BlockStateBaseMixin implements ISmoothTerrainBlockState {
+
+	@Shadow
+	protected abstract BlockState asState();
+
+	@Shadow
+	public abstract Block getBlock();
+
+	@Unique
+	public boolean noCubes$isSmoothable;
+
+	@Override
+	public void noCubes$setSmoothable(boolean value) {
+		noCubes$isSmoothable = value;
+	}
+
+	@Override
+	public boolean noCubes$isSmoothable() {
+		return noCubes$isSmoothable;
+	}
+
+	/**
+	 * Documentation on {@link Hooks#shouldCancelOcclusion}
+	 */
+	@Inject(
+		method = "canOcclude()Z",
+		at = @At("HEAD"),
+		cancellable = true
+	)
+	public void noCubes$canOcclude(CallbackInfoReturnable<Boolean> ci) {
+		if (Hooks.shouldCancelOcclusion((BlockStateBase) (Object) this))
+			ci.setReturnValue(false);
+	}
+
+	/**
+	 * Makes the 3rd person camera not be super zoomed-in when half inside a smoothed block.
+	 */
+	@Inject(
+		method = "getVisualShape",
+		at = @At("HEAD"),
+		cancellable = true
+	)
+	public void noCubes$getVisualShape(BlockGetter level, BlockPos pos, CollisionContext context, CallbackInfoReturnable<VoxelShape> cir) {
+		var state = asState();
+		if (!Hooks.renderingEnabledFor(state))
+			return;
+		// The smooth shape is what the player sees; getCollisionShape is a different method so this
+		// cannot recurse into this injection.
+		cir.setReturnValue(state.getCollisionShape(level, pos, context));
+	}
+
+	// region Collisions
+
+	/**
+	 * Makes collisions work for BlockStates with a cache.
+	 * BlockStates with a cache would usually return their cached value, we need to change this (because commonly
+	 * smoothed blocks like stone and dirt have a cache).
+	 */
+	@Inject(
+		method = "getCollisionShape(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/shapes/VoxelShape;",
+		at = @At("HEAD"),
+		cancellable = true
+	)
+	public void noCubes$getCollisionShape(BlockGetter level, BlockPos pos, CallbackInfoReturnable<VoxelShape> cir) {
+		noCubes$collisionShapeHelper(asState(), level, pos, CollisionContext.empty(), cir);
+	}
+
+	/**
+	 * Makes collisions work.
+	 */
+	@Inject(
+		method = "getCollisionShape(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/phys/shapes/CollisionContext;)Lnet/minecraft/world/phys/shapes/VoxelShape;",
+		at = @At("HEAD"),
+		cancellable = true
+	)
+	public void noCubes$getCollisionShape(BlockGetter level, BlockPos pos, CollisionContext context, CallbackInfoReturnable<VoxelShape> cir) {
+		noCubes$collisionShapeHelper(asState(), level, pos, context, cir);
+	}
+
+	@Unique
+	private static void noCubes$collisionShapeHelper(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context, CallbackInfoReturnable<VoxelShape> cir) {
+		if (!Hooks.collisionsEnabledFor(state))
+			return;
+		// During Entity#collide the section mesh is injected by CollisionGetterMixin. Do not also
+		// return the old per-cell approximation: apart from making sloped terrain too thick, that
+		// approximation is block-local while the exact mesh is world-space. All other callers keep
+		// the ordinary smooth-terrain shape for suffocation, placement, camera, pathfinding, etc.
+		if (MeshCollisionScope.isEntityMovement()) {
+			cir.setReturnValue(Shapes.empty());
+		} else {
+			cir.setReturnValue(CollisionHandler.getShapeOfSmoothBlock(state, level, pos, context));
+		}
+	}
+
+	/**
+	 * Makes collisions work for normally solid blocks like stone (by overriding the cached value).
+	 * Also stops us falling through 1 block wide holes and under the ground.
+	 * How? I don't really know.
+	 * Returning true from 'hasLargeCollisionShape' makes smooth blocks be included in the blocks checked by
+	 * {@link BlockCollisions#computeNext} when they are touching a boundary of the area (normally they wouldn't be).
+	 *
+	 * @implNote This could be moved to {@link BlockCollisionsMixin} (the only place it's called from as of 1.18.2) to avoid
+	 * the {@link CallbackInfoReturnable} allocation at the expense of compatibility with future call sites (e.g. in mods).
+	 */
+	@Inject(
+		method = "hasLargeCollisionShape",
+		at = @At("HEAD"),
+		cancellable = true
+	)
+	public void noCubes$hasLargeCollisionShape(CallbackInfoReturnable<Boolean> cir) {
+		if (Hooks.collisionsEnabledFor(asState()))
+			cir.setReturnValue(true);
+	}
+
+	// endregion
+}

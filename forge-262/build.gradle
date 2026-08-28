@@ -1,0 +1,108 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '7.0.17'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-forge-${minecraft_version}"
+}
+
+// Mojang ships Java 25 to end users in 26.1+, so the mod targets Java 25.
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+sourceSets {
+    main {
+        // Canonical Smooth Terrain mesh/collision core. Loader bootstrap, rendering,
+        // networking, and mixin entrypoints stay target-local (compat tree in this module).
+        java.srcDir('../src/main/java/io/github/favasur/smoothterrain')
+        // 26.2 API-adapted copies of these canonical core files live in the module's compat dir.
+        java.exclude 'config/SmoothTerrainConfig.java'
+        java.exclude 'util/Area.java'
+        java.exclude 'mesh/MeshCache.java'
+        java.exclude 'collision/CollisionHandler.java'
+        java.exclude 'client/**'
+        java.exclude 'hooks/Hooks.java'
+        java.exclude 'hooks/ClientHooks.java'
+        java.exclude 'network/**'
+        java.exclude 'neoforge/**'
+        java.exclude 'platform/IClientPlatform.java'
+        java.exclude 'platform/IMixinPlatform.java'
+        java.exclude 'mixin/**'
+        java.exclude 'config/SmoothTerrainConfigImpl.java'
+        java.exclude 'platform/IPlatform.java'
+        java.exclude 'platform/PlatformLoader.java'
+        java.exclude 'hooks/trait/**'
+        java.exclude 'smoothable/SmoothableHandler.java'
+        java.exclude 'util/BlockStateSerializer.java'
+    }
+}
+
+minecraft {
+    runs {
+        configureEach {
+            workingDir = layout.projectDirectory.dir('run')
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            systemProperty 'forge.logging.console.level', 'debug'
+        }
+
+        register('client') {
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+        }
+
+        register('server') {
+            systemProperty 'forge.enabledGameTestNamespaces', project.mod_id
+            args '--nogui'
+        }
+    }
+}
+
+repositories {
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+    mavenCentral()
+}
+
+dependencies {
+    implementation minecraft.dependency("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
+    annotationProcessor 'net.minecraftforge:eventbus-validator:7.0.5'
+}
+
+
+// Expand ${...} placeholders in mods.toml at build time.
+tasks.withType(ProcessResources).configureEach {
+    var replaceProperties = [
+            minecraft_version_range: minecraft_version_range,
+            forge_version          : forge_version,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml']) {
+        expand replaceProperties
+    }
+}
+
+tasks.register('collectJars') {
+    dependsOn tasks.named('jar')
+    doLast {
+        def output = file('../dist')
+        output.mkdirs()
+        copy {
+            from tasks.named('jar').get().archiveFile
+            into output
+            rename { "${mod_id}-forge-${minecraft_version}-${mod_version}.jar" }
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

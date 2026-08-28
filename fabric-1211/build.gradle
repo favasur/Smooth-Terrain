@@ -1,0 +1,83 @@
+plugins {
+    id 'fabric-loom' version '1.11.3'
+    id 'java-library'
+    id 'maven-publish'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-fabric-${minecraft_version}"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+sourceSets {
+    main {
+        // Canonical Smooth Terrain core (mesh, collision, config, network, renderer, mixins).
+        // The Fabric module supplies its own KeyMappings (no NeoForge network layer), the two
+        // Video Settings widgets, EntityMixin + two client mixins in the same canonical package,
+        // its own VanillaRenderer (vanilla SectionCompiler entry point instead of the NeoForge
+        // AddSectionGeometryEvent) and its own Color struct copy.
+        java.srcDir('../src/main/java/io/github/favasur/smoothterrain')
+        java.exclude 'client/KeyMappings.java'
+        java.exclude 'client/SmoothTerrainRoughnessSlider.java'
+        java.exclude 'client/SmoothTerrainToggleButton.java'
+        java.exclude 'client/render/VanillaRenderer.java'
+        java.exclude 'client/render/struct/Color.java'
+        java.exclude 'network/SmoothTerrainNetworkNeoForge.java'
+        java.exclude 'network/S2CUpdateServerConfig.java'
+        java.exclude 'neoforge/**'
+        java.exclude 'mixin/EntityMixin.java'
+        java.exclude 'mixin/client/ScreenEffectRendererMixin.java'
+        java.exclude 'mixin/client/VideoSettingsScreenMixin.java'
+        java.exclude 'mixin/client/RenderChunkRebuildTaskMixin.java'
+        java.exclude 'compat/**'
+        java.exclude 'config/neoforge/**'
+        java.exclude 'config/SmoothTerrainConfigImpl.java'
+    }
+}
+
+loom {
+    // The NeoForge/Forge ports use Mojang official mappings; keep the code identical by
+    // using the same mappings here instead of Yarn.
+    officialMojangMappings()
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    modImplementation 'io.github.llamalad7:mixinextras-fabric:0.5.4'
+}
+
+tasks.register('collectJars') {
+    dependsOn tasks.named('jar')
+    doLast {
+        def output = rootProject.file('dist')
+        output.mkdirs()
+        copy {
+            from tasks.named('jar').get().archiveFile
+            into output
+            rename { "${mod_id}-fabric-${minecraft_version}-${mod_version}.jar" }
+        }
+    }
+}
+
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') {
+        expand 'version': project.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 21
+}

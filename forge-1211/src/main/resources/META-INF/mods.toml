@@ -1,0 +1,36 @@
+modLoader="javafml"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="Smooth Terrain contributors"
+description='''
+Meshes the world's surface into smooth terrain (Forge 1.21.1).
+
+Includes:
+- Smooth terrain rendering via a Surface-Nets mesh drawn into the vanilla chunk pipeline.
+- Custom collisions matching the mesh, with a movement-scoped collision layer.
+- Keybindings to toggle rendering and per-block smoothness, plus Video Settings options.
+
+Toggle and smoothable changes are applied locally (no Smooth Terrain network channel on Forge).
+'''
+
+[[dependencies.${mod_id}]]
+modId="forge"
+type="required"
+versionRange="[${forge_version},)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.${mod_id}]]
+modId="minecraft"
+type="required"
+versionRange="${minecraft_version_range}"
+ordering="NONE"
+side="BOTH"
+
+[[mixins]]
+config="smoothterrain.mixins.json"

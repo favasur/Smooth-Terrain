@@ -1,0 +1,112 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+    id 'org.spongepowered.mixin' version '0.7.+'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-forge-${minecraft_version}"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+sourceSets {
+    main {
+        // Canonical Smooth Terrain core (mesh, collision, config, renderer, mixins).
+        // The Forge module supplies its own network-free KeyMappings, its own VanillaRenderer
+        // (vanilla 4-arg SectionCompiler entry point instead of the NeoForge AddSectionGeometryEvent),
+        // the 4-arg RenderChunkRebuildTaskMixin / SectionCompilerMixin, the in-memory config impl
+        // and the Forge loader adapters; the canonical NeoForge network and loader trees are excluded.
+        java.srcDir('../src/main/java/io/github/favasur/smoothterrain')
+        java.exclude 'client/KeyMappings.java'
+        java.exclude 'client/render/VanillaRenderer.java'
+        java.exclude 'config/SmoothTerrainConfigImpl.java'
+        java.exclude 'network/**'
+        java.exclude 'neoforge/**'
+        java.exclude 'mixin/client/RenderChunkRebuildTaskMixin.java'
+    }
+}
+
+mixin {
+    add sourceSets.main, 'smoothterrain.refmap.json'
+    config 'smoothterrain.mixins.json'
+}
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+
+    runs {
+        client {
+            workingDirectory project.file('run/forge')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                smoothterrain {
+                    source sourceSets.main
+                }
+            }
+        }
+        server {
+            workingDirectory project.file('run/forge')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            args '--nogui'
+            mods {
+                smoothterrain {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://maven.minecraftforge.net' }
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
+    compileOnly 'org.spongepowered:mixin:0.8.7'
+    annotationProcessor 'org.spongepowered:mixin:0.8.7:processor'
+    implementation 'io.github.llamalad7:mixinextras-forge:0.5.4'
+    compileOnly 'io.github.llamalad7:mixinextras-common:0.5.4'
+}
+
+// Expand ${...} placeholders in mods.toml at build time.
+tasks.withType(ProcessResources).configureEach {
+    var replaceProperties = [
+            minecraft_version_range: minecraft_version_range,
+            forge_version          : forge_version,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml']) {
+        expand replaceProperties
+    }
+}
+
+tasks.register('collectJars') {
+    dependsOn tasks.named('jar')
+    doLast {
+        def output = file('../dist')
+        output.mkdirs()
+        copy {
+            from tasks.named('jar').get().archiveFile
+            into output
+            rename { "${mod_id}-forge-${minecraft_version}-${mod_version}.jar" }
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

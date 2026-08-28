@@ -1,0 +1,102 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.gradle.userdev' version '7.1.38'
+}
+
+version = mod_version
+group = mod_group_id
+
+base {
+    archivesName = "${mod_id}-neoforge-${minecraft_version}"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+sourceSets {
+    main {
+        // Canonical Smooth Terrain mesh/collision core. Loader bootstrap, rendering,
+        // networking, and mixin entrypoints stay target-local (compat tree in this module).
+        java.srcDir('../src/main/java/io/github/favasur/smoothterrain')
+        // 26.2 API-adapted copies of these canonical core files live in the module's compat dir.
+        java.exclude 'config/SmoothTerrainConfig.java'
+        java.exclude 'util/Area.java'
+        java.exclude 'mesh/MeshCache.java'
+        java.exclude 'collision/CollisionHandler.java'
+        java.exclude 'client/**'
+        java.exclude 'hooks/Hooks.java'
+        java.exclude 'hooks/ClientHooks.java'
+        java.exclude 'network/**'
+        java.exclude 'neoforge/**'
+        java.exclude 'platform/IClientPlatform.java'
+        java.exclude 'platform/IMixinPlatform.java'
+        java.exclude 'mixin/**'
+        java.exclude 'config/SmoothTerrainConfigImpl.java'
+        java.exclude 'platform/IPlatform.java'
+        java.exclude 'platform/PlatformLoader.java'
+        java.exclude 'hooks/trait/**'
+        java.exclude 'smoothable/SmoothableHandler.java'
+        java.exclude 'util/BlockStateSerializer.java'
+    }
+}
+
+runs {
+    configureEach {
+        systemProperty 'forge.logging.markers', 'REGISTRIES'
+        systemProperty 'forge.logging.console.level', 'debug'
+        workingDirectory project.layout.projectDirectory.dir('run').dir(name)
+        modSource project.sourceSets.main
+    }
+
+    client {
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+    }
+
+    server {
+        systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        argument '--nogui'
+    }
+}
+
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+dependencies {
+    implementation "net.neoforged:neoforge:${neo_version}"
+}
+
+// Expand ${...} placeholders in the mods.toml at build time.
+tasks.withType(ProcessResources).configureEach {
+    var replaceProperties = [
+            minecraft_version      : minecraft_version,
+            minecraft_version_range: minecraft_version_range,
+            neo_version            : neo_version,
+            loader_version_range   : loader_version_range,
+            mod_id                 : mod_id,
+            mod_name               : mod_name,
+            mod_license            : mod_license,
+            mod_version            : mod_version,
+    ]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/neoforge.mods.toml']) {
+        expand replaceProperties
+    }
+}
+
+tasks.register('collectJars') {
+    dependsOn tasks.named('jar')
+    doLast {
+        def output = rootProject.file('dist')
+        output.mkdirs()
+        copy {
+            from tasks.named('jar').get().archiveFile
+            into output
+            rename { "${mod_id}-neoforge-${minecraft_version}-${mod_version}.jar" }
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

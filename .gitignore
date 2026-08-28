@@ -1,0 +1,36 @@
+# Gradle
+.gradle/
+build/
+out/
+
+# Minecraft dev runs
+run/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+bin/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local overrides
+gradle-local.properties
+
+# Dev scratch / reverse-engineering tools and stray artifacts
+.tools/
+/net/
+client-log.txt
+client-launch.log
+icon.png
+.freebuff/
+
+# Spin-off repo hygiene
+dist/
+/source/
+/NoCubes-*.jar

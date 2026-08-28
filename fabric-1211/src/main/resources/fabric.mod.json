@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "smoothterrain",
+  "version": "${version}",
+  "name": "Smooth Terrain",
+  "description": "Smooth Terrain (Surface Nets meshing) for Fabric 1.21.1: smooths block terrain into organic slopes, adds custom collisions, per-block smoothability toggles and a terrain smoothness slider in Video Settings.",
+  "authors": [
+    "Smooth Terrain contributors"
+  ],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "io.github.favasur.smoothterrain.fabric.SmoothTerrainMod"
+    ],
+    "client": [
+      "io.github.favasur.smoothterrain.fabric.SmoothTerrainModClient"
+    ]
+  },
+  "mixins": [
+    "smoothterrain.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": ">=1.21.1 <1.22",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
