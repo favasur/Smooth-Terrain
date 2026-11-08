@@ -51,6 +51,17 @@ ROCK_SOUNDS = {
     "byTool": {"Pickaxe": {"hit": "block/rock-hit-pickaxe", "break": "block/rock-break-pickaxe"}},
 }
 
+# The vanilla landslide behaviour is carried over so curved slopes are part of the
+# same collapse mechanic as the cubes they replace: disturbed sand, gravel and snow
+# slide as curved blocks instead of turning back into cubes.
+SLIDE_PROPERTIES = {"fallSound": "effect/rockslide", "dustIntensity": 1, "fallSidewaysChance": 0.75}
+SOFT_SLIDE_PROPERTIES = {"fallSound": "effect/rockslide", "dustIntensity": 0}
+SNOW_FALL_PROPERTIES = {"impactDamageMul": 0, "fallSideways": False, "dustIntensity": 0.75}
+
+
+def slides(properties):
+    return [{"name": "UnstableFalling", "properties": properties}]
+
 # The family list is the mod's coverage of natural walkable terrain. Prefixes are matched
 # against vanilla block codes; longer, more specific prefixes must come first.
 FAMILIES = [
@@ -117,6 +128,7 @@ FAMILIES = [
         "material": "Soil",
         "resistance": 2.2,
         "sounds": DIRT_SOUNDS,
+        "behaviors": slides(SOFT_SLIDE_PROPERTIES),
     },
     {
         "code": "fillet-sludgygravel",
@@ -127,6 +139,7 @@ FAMILIES = [
         "material": "Soil",
         "resistance": 2.2,
         "sounds": DIRT_SOUNDS,
+        "behaviors": slides(SOFT_SLIDE_PROPERTIES),
     },
     {
         "code": "fillet-sand",
@@ -137,6 +150,7 @@ FAMILIES = [
         "material": "Sand",
         "resistance": 1.8,
         "sounds": SAND_SOUNDS,
+        "behaviors": slides(SLIDE_PROPERTIES),
     },
     {
         "code": "fillet-gravel",
@@ -147,6 +161,7 @@ FAMILIES = [
         "material": "Gravel",
         "resistance": 2.4,
         "sounds": GRAVEL_SOUNDS,
+        "behaviors": slides(SLIDE_PROPERTIES),
     },
     {
         "code": "fillet-dirtygravel",
@@ -157,6 +172,7 @@ FAMILIES = [
         "material": "Gravel",
         "resistance": 2.4,
         "sounds": GRAVEL_SOUNDS,
+        "behaviors": slides(SLIDE_PROPERTIES),
     },
     {
         "code": "fillet-rock",
@@ -177,6 +193,7 @@ FAMILIES = [
         "texture": "survival:block/liquid/snow/normal1",
         "material": "Snow",
         "resistance": 3.5,
+        "behaviors": slides(SNOW_FALL_PROPERTIES),
     },
     {
         "code": "fillet-packedglacierice",
@@ -249,6 +266,8 @@ def build_block(family):
     block["resistance"] = family["resistance"]
     block["lightAbsorption"] = family.get("lightAbsorption", 0)
     block["sideopaque"] = {"all": False}
+    if family.get("behaviors"):
+        block["behaviors"] = family["behaviors"]
     if family.get("renderpass"):
         block["renderpass"] = family["renderpass"]
     if family.get("requiredMiningTier"):

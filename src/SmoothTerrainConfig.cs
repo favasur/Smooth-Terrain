@@ -38,6 +38,12 @@ namespace SmoothTerrain
         /// <summary>Columns inspected per player per tick. Keeps the pass cheap.</summary>
         public int ColumnsPerTick = 384;
 
+        /// <summary>
+        /// Columns of a freshly loaded chunk that are converted per tick. A whole chunk column
+        /// is 1024 blocks, so the default smooths two newly loaded chunks per pass.
+        /// </summary>
+        public int ChunkColumnsPerTick = 2048;
+
         /// <summary>Interval of the smoothing pass in milliseconds.</summary>
         public int TickIntervalMs = 500;
 

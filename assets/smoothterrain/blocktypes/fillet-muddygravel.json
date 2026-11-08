@@ -45,6 +45,15 @@
   "sideopaque": {
     "all": false
   },
+  "behaviors": [
+    {
+      "name": "UnstableFalling",
+      "properties": {
+        "fallSound": "effect/rockslide",
+        "dustIntensity": 0
+      }
+    }
+  ],
   "sounds": {
     "place": "block/dirt",
     "break": "block/dirt",

@@ -96,8 +96,19 @@ hand.
    is converted first and the pass stays cheap. It is idempotent: a converted column is no longer a
    vanilla terrain block and is skipped on later passes.
 
-It starts by itself when the mod loads. Chunks are processed only when loaded, so existing worlds
-are smoothed progressively as you explore them, and newly generated terrain is smoothed on the fly.
+It starts by itself when the mod loads. Every chunk column is queued the moment the server loads
+it, and the queue is drained with a fixed per-tick budget. Smoothing therefore follows the whole
+loaded world, not just the player's radius; the radius pass remains as a fast repair for terrain
+that changes while you play. Newly generated terrain is smoothed on the fly.
+
+## Landslides
+
+Vanilla's `UnstableFalling` landslide behaviour is carried over to the fillet versions of the
+materials that use it: sand, gravel, dirty gravel, muddy/sludgy gravel and snow. A curved slope is
+therefore part of the same collapse mechanic as a cube. Digging out its support makes the fillet
+block slide, and the falling block is still the curved fillet block rather than a cube. Because the
+sweep keeps running, the surface left behind by the slide is re-filleted as the terrain settles, so
+a landslide near a player does not leave a permanently stepped cube pile.
 
 ## Settings switch
 
@@ -144,6 +155,7 @@ On first start the mod writes `ModConfig/smoothterrain.json` in your data direct
 | `Enabled` | `true` | Master switch for the sweep and the command |
 | `Radius` | `24` | Blocks around each player kept smoothed |
 | `ColumnsPerTick` | `384` | Columns inspected per player per pass |
+| `ChunkColumnsPerTick` | `2048` | Columns of newly loaded chunks converted per pass |
 | `TickIntervalMs` | `500` | Sweep interval |
 | `SkipLiquidCoveredSurfaces` | `true` | Leave shorelines alone (see limitations) |
 | `Families` | all 15 terrain families | Vanilla code prefix -> fillet code prefix |
@@ -173,6 +185,9 @@ All forms require `controlserver`.
   badly; set `SkipLiquidCoveredSurfaces` to `false` if you want to experiment.
 * **Decorations do not follow the curve.** Grass tufts and flowers keep their voxel placement, so
   they can appear slightly above a curved top face.
+* **Falling slopes land as full blocks.** A fillet that slides is re-curved by the sweep only where
+  the repair pass reaches it; slopes that fall outside the loaded/repair area stay as landed
+  blocks until the chunk is loaded again.
 * **Slopes drop themselves.** Breaking a curved slope gives back a curved slope block rather than
   the original material.
 * **Snow and ice are surfaced like any other material.** `snowblock`, `lakeice` and `glacierice`
@@ -190,8 +205,9 @@ All forms require `controlserver`.
 * The mesh is regenerated deterministically and checked (`FilletMeshGen --check`); it stays inside
   the unit cube, has 50 quads and the expected `top`/`all` material groups.
 * `tools/gen_fillet_blocks.py --check` proves the committed block types match the family table;
-  `tools/verify_content.py` validates strict JSON, variant coverage, and that every vanilla code
-  the sweep can meet maps to a declared fillet block (15 files, 412 variants).
+  `tools/verify_content.py` validates strict JSON, variant coverage, carried-over landslide
+  behaviours, and that every vanilla code the sweep can meet maps to a declared fillet block
+  (15 files, 412 variants).
 * All referenced vanilla textures were confirmed present in the installed 1.22.7 assets.
 * **Not launched in game.** Behaviour in play (block loading, texture mapping of the OBJ materials,
   collision feel, water interaction) and the injected Graphics switch have not been observed; they

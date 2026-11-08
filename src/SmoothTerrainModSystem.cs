@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -19,6 +20,7 @@ namespace SmoothTerrain
 
         private readonly Dictionary<string, int> cursors = new Dictionary<string, int>();
         private readonly List<BlockOffset> offsets = new List<BlockOffset>();
+        private readonly ConcurrentQueue<Vec2i> pendingChunks = new ConcurrentQueue<Vec2i>();
         private int offsetsRadius = -1;
 
         private struct BlockOffset
@@ -42,6 +44,7 @@ namespace SmoothTerrain
             }
 
             config.Radius = GameMath.Clamp(config.Radius, 1, 128);
+            config.ChunkColumnsPerTick = GameMath.Clamp(config.ChunkColumnsPerTick, 64, 16384);
             api.Logger.Notification("[smoothterrain] loaded (enabled={0}, radius={1})", config.Enabled, config.Radius);
         }
 
@@ -58,7 +61,18 @@ namespace SmoothTerrain
                 Privilege.controlserver
             );
 
+            // Every chunk column is queued as it loads, so smoothing does not depend on a
+            // player walking into it or on running a command. The queue is drained gradually
+            // by the same tick listener that keeps the area around players up to date.
+            api.Event.ChunkColumnLoaded += OnChunkColumnLoaded;
+
             api.Event.RegisterGameTickListener(OnServerTick, GameMath.Clamp(config.TickIntervalMs, 50, 10000));
+        }
+
+        private void OnChunkColumnLoaded(Vec2i chunkCoord, IWorldChunk[] chunks)
+        {
+            if (config == null || !config.Enabled) return;
+            pendingChunks.Enqueue(chunkCoord);
         }
 
         private TextCommandResult OnSmoothCommand(IServerPlayer player, CmdArgs cmdArgs)
@@ -127,9 +141,12 @@ namespace SmoothTerrain
 
             if (enabled)
             {
+                EnqueueLoadedChunksAroundPlayers();
                 return TextCommandResult.Success(
-                    "Smooth Terrain on: terrain edges curve automatically as you move", null);
+                    "Smooth Terrain on: terrain edges curve automatically as chunks load and you move", null);
             }
+
+            pendingChunks.Clear();
 
             int reverted = 0;
             if (player?.Entity != null)
@@ -170,14 +187,71 @@ namespace SmoothTerrain
             return 1;
         }
 
+        /// <summary>Re-queues the chunk columns around players, used when smoothing is turned back on.</summary>
+        private void EnqueueLoadedChunksAroundPlayers()
+        {
+            IBlockAccessor ba = sapi.World.BlockAccessor;
+            int chunkSize = GlobalConstants.ChunkSize;
+            int chunkRadius = (config.Radius + chunkSize - 1) / chunkSize;
+            IPlayer[] players = sapi.World.AllOnlinePlayers;
+
+            for (int p = 0; p < players.Length; p++)
+            {
+                if (players[p]?.Entity == null) continue;
+
+                int pcx = (int)players[p].Entity.Pos.X / chunkSize;
+                int pcz = (int)players[p].Entity.Pos.Z / chunkSize;
+
+                for (int dz = -chunkRadius; dz <= chunkRadius; dz++)
+                {
+                    for (int dx = -chunkRadius; dx <= chunkRadius; dx++)
+                    {
+                        if (ba.GetMapChunk(pcx + dx, pcz + dz) == null) continue;
+                        pendingChunks.Enqueue(new Vec2i(pcx + dx, pcz + dz));
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Converts whole newly loaded chunks without waiting for a player to stand next to
+        /// them. Processing is budgeted so a teleport or a large view distance cannot stall
+        /// the server: whatever does not fit stays queued for the next tick.
+        /// </summary>
+        private void SmoothQueuedChunks(IBlockAccessor ba)
+        {
+            int budget = Math.Max(64, config.ChunkColumnsPerTick);
+            int processed = 0;
+            int chunkSize = GlobalConstants.ChunkSize;
+
+            Vec2i coord;
+            while (processed < budget && pendingChunks.TryDequeue(out coord))
+            {
+                int baseX = coord.X * chunkSize;
+                int baseZ = coord.Y * chunkSize;
+
+                for (int dz = 0; dz < chunkSize; dz++)
+                {
+                    for (int dx = 0; dx < chunkSize; dx++)
+                    {
+                        SmoothColumn(ba, baseX + dx, baseZ + dz);
+                    }
+                }
+
+                processed += chunkSize * chunkSize;
+            }
+        }
+
         private void OnServerTick(float dt)
         {
             if (!config.Enabled || sapi == null) return;
 
+            IBlockAccessor ba = sapi.World.BlockAccessor;
+            SmoothQueuedChunks(ba);
+
             EnsureOffsets(config.Radius);
             if (offsets.Count == 0) return;
 
-            IBlockAccessor ba = sapi.World.BlockAccessor;
             IPlayer[] players = sapi.World.AllOnlinePlayers;
 
             for (int p = 0; p < players.Length; p++)

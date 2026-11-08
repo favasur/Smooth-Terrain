@@ -54,6 +54,11 @@ def check_family(family, block, name):
     if block.get("class") != "BlockTerrainFillet":
         fail("%s: class must be BlockTerrainFillet" % name)
 
+    expected_behaviors = [behavior["name"] for behavior in family.get("behaviors", [])]
+    actual_behaviors = [behavior.get("name") for behavior in block.get("behaviors", [])]
+    if actual_behaviors != expected_behaviors:
+        fail("%s: behaviors are %s, expected %s" % (name, actual_behaviors, expected_behaviors))
+
     groups = block.get("variantgroups", [])
     expected = [(group, list(states)) for group, states in family["groups"]]
     expected.append(("side", SIDES))

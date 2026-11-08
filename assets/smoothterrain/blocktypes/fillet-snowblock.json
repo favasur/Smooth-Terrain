@@ -44,5 +44,15 @@
   "lightAbsorption": 0,
   "sideopaque": {
     "all": false
-  }
+  },
+  "behaviors": [
+    {
+      "name": "UnstableFalling",
+      "properties": {
+        "impactDamageMul": 0,
+        "fallSideways": false,
+        "dustIntensity": 0.75
+      }
+    }
+  ]
 }
