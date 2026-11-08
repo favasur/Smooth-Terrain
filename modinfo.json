@@ -1,0 +1,12 @@
+{
+  "type": "code",
+  "modid": "smoothterrain",
+  "name": "Smooth Terrain",
+  "authors": ["You"],
+  "description": "Replaces stepped terrain edges with curved Bezier slopes whose collision boxes are generated from the same curve as the mesh, so the curve is the surface you actually walk on.",
+  "version": "0.1.0",
+  "side": "Universal",
+  "dependencies": {
+    "game": "1.22.0"
+  }
+}

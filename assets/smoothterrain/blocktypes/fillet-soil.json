@@ -1,0 +1,89 @@
+{
+  "code": "fillet-soil",
+  "class": "BlockTerrainFillet",
+  "variantgroups": [
+    {
+      "code": "fertility",
+      "states": [
+        "verylow",
+        "low",
+        "medium",
+        "compost",
+        "high"
+      ]
+    },
+    {
+      "code": "grasscoverage",
+      "states": [
+        "none",
+        "verysparse",
+        "sparse",
+        "normal"
+      ]
+    },
+    {
+      "code": "side",
+      "states": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    }
+  ],
+  "shape": {
+    "format": "obj",
+    "base": "block/terrain-fillet",
+    "rotateYByType": {
+      "*-north": 0,
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90
+    }
+  },
+  "drawtype": "json",
+  "blockmaterial": "Soil",
+  "texturesByType": {
+    "*-none-*": {
+      "obj": {
+        "base": "survival:block/soil/fert{fertility}"
+      },
+      "all": {
+        "base": "survival:block/soil/fert{fertility}"
+      },
+      "top": {
+        "base": "survival:block/soil/fert{fertility}"
+      }
+    },
+    "*": {
+      "obj": {
+        "base": "survival:block/soil/fert{fertility}"
+      },
+      "all": {
+        "base": "survival:block/soil/fert{fertility}"
+      },
+      "top": {
+        "base": "survival:block/soil/fert{fertility}",
+        "overlays": [
+          "survival:block/plant/grasscoverage/{grasscoverage}"
+        ]
+      }
+    }
+  },
+  "attributes": {
+    "handbook": {
+      "exclude": true
+    }
+  },
+  "resistance": 1.8,
+  "lightAbsorption": 0,
+  "sideopaque": {
+    "all": false
+  },
+  "sounds": {
+    "place": "block/dirt",
+    "break": "block/dirt",
+    "hit": "block/dirt",
+    "walk": "walk/grass"
+  }
+}

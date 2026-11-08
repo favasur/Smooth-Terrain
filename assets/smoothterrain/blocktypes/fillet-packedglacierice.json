@@ -1,0 +1,48 @@
+{
+  "code": "fillet-packedglacierice",
+  "class": "BlockTerrainFillet",
+  "variantgroups": [
+    {
+      "code": "side",
+      "states": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    }
+  ],
+  "shape": {
+    "format": "obj",
+    "base": "block/terrain-fillet",
+    "rotateYByType": {
+      "*-north": 0,
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90
+    }
+  },
+  "drawtype": "json",
+  "blockmaterial": "Ice",
+  "textures": {
+    "obj": {
+      "base": "survival:block/liquid/ice/packedglacier1"
+    },
+    "all": {
+      "base": "survival:block/liquid/ice/packedglacier1"
+    },
+    "top": {
+      "base": "survival:block/liquid/ice/packedglacier1"
+    }
+  },
+  "attributes": {
+    "handbook": {
+      "exclude": true
+    }
+  },
+  "resistance": 0.5,
+  "lightAbsorption": 0,
+  "sideopaque": {
+    "all": false
+  }
+}

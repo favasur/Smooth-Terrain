@@ -1,0 +1,87 @@
+{
+  "code": "fillet-rock",
+  "class": "BlockTerrainFillet",
+  "variantgroups": [
+    {
+      "code": "rock",
+      "states": [
+        "andesite",
+        "basalt",
+        "bauxite",
+        "chalk",
+        "chert",
+        "claystone",
+        "conglomerate",
+        "granite",
+        "limestone",
+        "peridotite",
+        "phyllite",
+        "sandstone",
+        "shale",
+        "slate",
+        "halite",
+        "kimberlite",
+        "obsidian",
+        "scoria",
+        "suevite",
+        "travertine",
+        "tuff",
+        "whitemarble",
+        "redmarble",
+        "greenmarble"
+      ]
+    },
+    {
+      "code": "side",
+      "states": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    }
+  ],
+  "shape": {
+    "format": "obj",
+    "base": "block/terrain-fillet",
+    "rotateYByType": {
+      "*-north": 0,
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90
+    }
+  },
+  "drawtype": "json",
+  "blockmaterial": "Stone",
+  "textures": {
+    "obj": {
+      "base": "survival:block/stone/rock/{rock}1"
+    },
+    "all": {
+      "base": "survival:block/stone/rock/{rock}1"
+    },
+    "top": {
+      "base": "survival:block/stone/rock/{rock}1"
+    }
+  },
+  "attributes": {
+    "handbook": {
+      "exclude": true
+    }
+  },
+  "resistance": 8,
+  "lightAbsorption": 0,
+  "sideopaque": {
+    "all": false
+  },
+  "requiredMiningTier": 2,
+  "sounds": {
+    "walk": "walk/stone",
+    "byTool": {
+      "Pickaxe": {
+        "hit": "block/rock-hit-pickaxe",
+        "break": "block/rock-break-pickaxe"
+      }
+    }
+  }
+}

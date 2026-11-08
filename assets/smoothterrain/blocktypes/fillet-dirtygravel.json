@@ -1,0 +1,71 @@
+{
+  "code": "fillet-dirtygravel",
+  "class": "BlockTerrainFillet",
+  "variantgroups": [
+    {
+      "code": "moisture",
+      "states": [
+        "dry",
+        "wet",
+        "wetdark",
+        "wetverydark"
+      ]
+    },
+    {
+      "code": "type",
+      "states": [
+        "cracked",
+        "plain",
+        "stoney"
+      ]
+    },
+    {
+      "code": "side",
+      "states": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    }
+  ],
+  "shape": {
+    "format": "obj",
+    "base": "block/terrain-fillet",
+    "rotateYByType": {
+      "*-north": 0,
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90
+    }
+  },
+  "drawtype": "json",
+  "blockmaterial": "Gravel",
+  "textures": {
+    "obj": {
+      "base": "survival:block/stone/dirtygravel/{moisture}/{type}1"
+    },
+    "all": {
+      "base": "survival:block/stone/dirtygravel/{moisture}/{type}1"
+    },
+    "top": {
+      "base": "survival:block/stone/dirtygravel/{moisture}/{type}1"
+    }
+  },
+  "attributes": {
+    "handbook": {
+      "exclude": true
+    }
+  },
+  "resistance": 2.4,
+  "lightAbsorption": 0,
+  "sideopaque": {
+    "all": false
+  },
+  "sounds": {
+    "place": "block/gravel",
+    "break": "block/gravel",
+    "hit": "block/gravel",
+    "walk": "walk/gravel"
+  }
+}

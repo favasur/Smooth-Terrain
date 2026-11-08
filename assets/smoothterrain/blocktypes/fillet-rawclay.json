@@ -1,0 +1,85 @@
+{
+  "code": "fillet-rawclay",
+  "class": "BlockTerrainFillet",
+  "variantgroups": [
+    {
+      "code": "type",
+      "states": [
+        "blue",
+        "red",
+        "fire"
+      ]
+    },
+    {
+      "code": "grasscoverage",
+      "states": [
+        "none",
+        "verysparse"
+      ]
+    },
+    {
+      "code": "side",
+      "states": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    }
+  ],
+  "shape": {
+    "format": "obj",
+    "base": "block/terrain-fillet",
+    "rotateYByType": {
+      "*-north": 0,
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90
+    }
+  },
+  "drawtype": "json",
+  "blockmaterial": "Soil",
+  "texturesByType": {
+    "*-none-*": {
+      "obj": {
+        "base": "survival:block/soil/{type}clay"
+      },
+      "all": {
+        "base": "survival:block/soil/{type}clay"
+      },
+      "top": {
+        "base": "survival:block/soil/{type}clay"
+      }
+    },
+    "*": {
+      "obj": {
+        "base": "survival:block/soil/{type}clay"
+      },
+      "all": {
+        "base": "survival:block/soil/{type}clay"
+      },
+      "top": {
+        "base": "survival:block/soil/{type}clay",
+        "overlays": [
+          "survival:block/plant/grasscoverage/{grasscoverage}"
+        ]
+      }
+    }
+  },
+  "attributes": {
+    "handbook": {
+      "exclude": true
+    }
+  },
+  "resistance": 4,
+  "lightAbsorption": 0,
+  "sideopaque": {
+    "all": false
+  },
+  "sounds": {
+    "place": "block/dirt",
+    "break": "block/dirt",
+    "hit": "block/dirt",
+    "walk": "walk/grass"
+  }
+}

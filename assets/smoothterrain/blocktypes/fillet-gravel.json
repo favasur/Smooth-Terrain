@@ -1,0 +1,73 @@
+{
+  "code": "fillet-gravel",
+  "class": "BlockTerrainFillet",
+  "variantgroups": [
+    {
+      "code": "rock",
+      "states": [
+        "andesite",
+        "basalt",
+        "bauxite",
+        "chalk",
+        "chert",
+        "claystone",
+        "conglomerate",
+        "granite",
+        "limestone",
+        "peridotite",
+        "phyllite",
+        "sandstone",
+        "shale",
+        "slate"
+      ]
+    },
+    {
+      "code": "side",
+      "states": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    }
+  ],
+  "shape": {
+    "format": "obj",
+    "base": "block/terrain-fillet",
+    "rotateYByType": {
+      "*-north": 0,
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90
+    }
+  },
+  "drawtype": "json",
+  "blockmaterial": "Gravel",
+  "textures": {
+    "obj": {
+      "base": "survival:block/stone/gravel/{rock}"
+    },
+    "all": {
+      "base": "survival:block/stone/gravel/{rock}"
+    },
+    "top": {
+      "base": "survival:block/stone/gravel/{rock}"
+    }
+  },
+  "attributes": {
+    "handbook": {
+      "exclude": true
+    }
+  },
+  "resistance": 2.4,
+  "lightAbsorption": 0,
+  "sideopaque": {
+    "all": false
+  },
+  "sounds": {
+    "place": "block/gravel",
+    "break": "block/gravel",
+    "hit": "block/gravel",
+    "walk": "walk/gravel"
+  }
+}

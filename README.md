@@ -1,0 +1,217 @@
+# Smooth Terrain
+
+A Vintage Story 1.22 mod that replaces stepped terrain edges with curved, *walkable* slopes.
+
+Every terrain step is normally a square block face: you walk to the edge, stop, and either jump
+up or drop off. Smooth Terrain replaces the surface block on the higher side of a one-block step
+with a block whose outer edge follows a cubic Bezier curve. The player walks up and down that
+curve. There is no visual overlay and no separate collider: the block the player stands on is the
+block whose collision boxes are generated from the same curve as its mesh.
+
+Smoothing runs automatically around every player. No chat command is needed to turn it on.
+
+## The curve
+
+The profile is a cubic Bezier in the vertical plane with control points
+
+```
+P0 = (0, 0)      P1 = (1/3, 0)      P2 = (2/3, 1)      P3 = (1, 1)
+```
+
+For this control polygon the x component evaluates to `x(t) = t`, so the curve is a height
+function and its height at normalised distance `u` from the low edge is
+
+```
+h(u) = 3u^2 - 2u^3
+```
+
+Both inner control points sit on an edge (`y = 0` and `y = 1`), which makes the tangent horizontal
+at `u = 0` and at `u = 1`. That matters physically as well as visually: the slope meets flat
+ground at the bottom and at the top without a lip to trip on and without a ridge to step over.
+
+`src/BezierProfile.cs` is the single source of truth. It has no game dependencies on purpose and
+is compiled into both the mod and the mesh generator, so the drawn surface and the collision
+boxes cannot drift apart.
+
+## Physics
+
+Vintage Story collision is axis-aligned boxes, not arbitrary triangles. The curve is therefore
+quantised into `16` thin boxes, each `1/16` of a block deep, whose top follows the curve at the
+middle of the slice:
+
+* maximum deviation between the drawn surface and the surface you stand on is `1/32` of a block;
+* each individual step is far below the player auto-step height, so a curved edge is walked,
+  never jumped;
+* the boxes are computed once per direction in `src/FilletCollision.cs` and cached, because
+  `GetCollisionBoxes` may be called from the physics thread;
+* selection boxes use the same array, so the curve also decides what you can target.
+
+Where the curve lives matters. The fillet **replaces the higher column's surface block** and
+falls away towards its lower neighbour, ending exactly at the lower column's top face. Because the
+fillet keeps the same cell as the block it replaces, its perpendicular faces are buried inside
+neighbouring solid terrain and no floating slivers or exposed blades appear.
+
+## Content
+
+The block types are generated from one family table (`tools/gen_fillet_blocks.py`) whose variant
+groups mirror the vanilla ones, so a curved slope keeps the material of the block it replaces:
+
+| Fillet family            | Vanilla source                       | Variants                    |
+|--------------------------|--------------------------------------|-----------------------------|
+| `fillet-soil`            | `soil-{fertility}-{coverage}`        | 5 fertility x 4 coverage    |
+| `fillet-rawclay`         | `rawclay-{type}-{coverage}`          | 3 clay x 2 coverage         |
+| `fillet-peat`            | `peat-{coverage}`                    | 2 coverage                  |
+| `fillet-cob`             | `cob-{coverage}`                     | 4 coverage                  |
+| `fillet-bonysoil`        | `bonysoil`                           | 1                           |
+| `fillet-muddygravel`     | `muddygravel`                        | 1                           |
+| `fillet-sludgygravel`    | `sludgygravel`                       | 1                           |
+| `fillet-sand`            | `sand-{rock}`                        | 14 rock types               |
+| `fillet-gravel`          | `gravel-{rock}`                      | 14 rock types               |
+| `fillet-dirtygravel`     | `dirtygravel-{moisture}-{type}`      | 4 moisture x 3 type         |
+| `fillet-rock`            | `rock-{rock}`                        | 24 rock types               |
+| `fillet-snowblock`       | `snowblock`                          | 1                           |
+| `fillet-packedglacierice`| `packedglacierice`                   | 1                           |
+| `fillet-glacierice`      | `glacierice`                         | 1                           |
+| `fillet-lakeice`         | `lakeice`                            | 1                           |
+
+Each family also has four `side` variants (north, east, south, west), giving **412 block variants**
+in total. Textures are the vanilla ones: sand, gravel, clay and rock slopes reuse their material
+texture, grass-covered families draw the vanilla grass overlay on the curved top face, and the two
+transparent ice families keep the vanilla transparent render pass.
+
+The mesh is one OBJ (`assets/smoothterrain/shapes/block/terrain-fillet.obj`), rotated per side by
+`rotateYByType`. It is generated by `tools/FilletMeshGen` from `BezierProfile`, never edited by
+hand.
+
+## How terrain is converted
+
+`src/SmoothTerrainModSystem.cs` runs a cheap, continuous sweep on the server:
+
+1. For each column near an online player it finds the topmost solid terrain block, walking down
+   past air and decoration (tall grass, snow layers).
+2. For each of the four horizontal neighbours it resolves the neighbour's surface the same way.
+3. If a neighbour's surface is exactly **one block lower**, the column's surface block is replaced
+   with the matching fillet block, oriented towards that neighbour.
+4. The sweep cycles outward from the player (`Radius`, `ColumnsPerTick`), so ground under your feet
+   is converted first and the pass stays cheap. It is idempotent: a converted column is no longer a
+   vanilla terrain block and is skipped on later passes.
+
+It starts by itself when the mod loads. Chunks are processed only when loaded, so existing worlds
+are smoothed progressively as you explore them, and newly generated terrain is smoothed on the fly.
+
+## Settings switch
+
+The vanilla settings screen has no public API for mod pages, so the mod adds one row directly to
+the existing **Graphics** tab:
+
+* Open **Settings → Graphics** and find **Smooth terrain** underneath the graphics controls.
+* Switching it off stops the sweep and immediately restores the vanilla surface blocks within
+  `Radius` of the player, so turning it off leaves no stale curved blocks behind.
+* Switching it on resumes the automatic sweep.
+
+The checkbox mirrors the last choice in `ModConfig/smoothterrain-client.json`. The world state is
+server-authoritative: the switch sends `/smoothterrain on|off`, which needs the `controlserver`
+privilege (the singleplayer host and server admins have it). On a dedicated server without that
+privilege the chat reports that the command is not allowed.
+
+Adding the row uses a Harmony postfix on the Graphics tab composer. The patch is guarded and
+skipped with a log message if a future game version changes that screen, so it cannot break the
+settings dialog itself.
+
+## Install
+
+Build and stage a loadable folder:
+
+```bash
+./build.sh
+```
+
+This regenerates the mesh and block types, validates the content, builds the mod against your local
+game assemblies and stages `dist/SmoothTerrain`. Copy that folder into your Vintage Story `Mods`
+directory (`VintagestoryData/Mods` or `Vintagestory/Mods`), then enable it in the mod list.
+
+Requirements: Vintage Story 1.22 and the .NET 10 SDK. The project reads the game assemblies from
+`$VINTAGE_STORY` when set, otherwise from `%APPDATA%/Vintagestory`; override with
+`dotnet build -p:VintageStoryPath=...`. `build.sh` prefers a project-local SDK in `.tools/.dotnet`
+and falls back to `dotnet` on `PATH`.
+
+## Configuration
+
+On first start the mod writes `ModConfig/smoothterrain.json` in your data directory:
+
+| Option | Default | Meaning |
+| --- | --- | --- |
+| `Enabled` | `true` | Master switch for the sweep and the command |
+| `Radius` | `24` | Blocks around each player kept smoothed |
+| `ColumnsPerTick` | `384` | Columns inspected per player per pass |
+| `TickIntervalMs` | `500` | Sweep interval |
+| `SkipLiquidCoveredSurfaces` | `true` | Leave shorelines alone (see limitations) |
+| `Families` | all 15 terrain families | Vanilla code prefix -> fillet code prefix |
+
+`Families` is the extension point for modded terrain: add an entry with the block code prefix and a
+matching fillet family, and the sweep will curve it too.
+
+## Command
+
+The command is optional; smoothing is already automatic.
+
+```
+/smoothterrain [radius]    # one immediate sweep around you
+/smoothterrain on          # enable the automatic sweep
+/smoothterrain off         # disable it and restore nearby vanilla blocks
+```
+
+All forms require `controlserver`.
+
+## Limitations
+
+* **Single-block steps only.** A fillet spans exactly one block of height. Two-block and taller
+  drops are cliffs and stay sharp.
+* **One edge per block.** If a block has several lower neighbours, the fillet faces the first one
+  found in north, east, south, west order. The other edges stay square.
+* **Shorelines are skipped by default.** A partial-height block next to water makes water behave
+  badly; set `SkipLiquidCoveredSurfaces` to `false` if you want to experiment.
+* **Decorations do not follow the curve.** Grass tufts and flowers keep their voxel placement, so
+  they can appear slightly above a curved top face.
+* **Slopes drop themselves.** Breaking a curved slope gives back a curved slope block rather than
+  the original material.
+* **Snow and ice are surfaced like any other material.** `snowblock`, `lakeice` and `glacierice`
+  lose their special `BlockSnow`/`BlockLakeIce`/`BlockGlacierIce` behaviour on converted cells;
+  `packedglacierice` and the non-ice families behave like ordinary full blocks.
+* **No worldgen pass.** Smoothing is a block conversion, not terrain generation, so it composes
+  with Terrain Slabs-style mods only where they do not also replace the same surface blocks.
+* The block class still registers its command through the legacy `RegisterCommand` overload, which
+  is marked obsolete in 1.22 but functional.
+
+## Verification status
+
+* Compiles cleanly against the installed 1.22.7 assemblies (`dotnet build -c Release`, one
+  obsolete-API warning described above).
+* The mesh is regenerated deterministically and checked (`FilletMeshGen --check`); it stays inside
+  the unit cube, has 50 quads and the expected `top`/`all` material groups.
+* `tools/gen_fillet_blocks.py --check` proves the committed block types match the family table;
+  `tools/verify_content.py` validates strict JSON, variant coverage, and that every vanilla code
+  the sweep can meet maps to a declared fillet block (15 files, 412 variants).
+* All referenced vanilla textures were confirmed present in the installed 1.22.7 assets.
+* **Not launched in game.** Behaviour in play (block loading, texture mapping of the OBJ materials,
+  collision feel, water interaction) and the injected Graphics switch have not been observed; they
+  still need a real session.
+
+## Layout
+
+```
+modinfo.json                   mod manifest
+SmoothTerrain.csproj           mod project (net10.0, references 0Harmony)
+src/BezierProfile.cs           curve math, no game dependencies
+src/FilletCollision.cs         curve -> cached collision/selection boxes
+src/BlockTerrainFillet.cs      block class wiring shape and physics together
+src/TerrainSmoother.cs         vanilla code <-> fillet code mapping
+src/SmoothTerrainConfig.cs     server config model
+src/SmoothTerrainModSystem.cs  server sweep, command, on/off revert
+src/SmoothTerrainClientModSystem.cs  Graphics tab switch (Harmony)
+assets/smoothterrain/          generated block types, lang, generated OBJ
+tools/gen_fillet_blocks.py     single terrain family table -> block JSONs
+tools/FilletMeshGen/           mesh generator (compiles BezierProfile.cs)
+tools/verify_content.py        content validator
+build.sh                       generate + validate + build + stage
+```

@@ -1,0 +1,54 @@
+{
+  "code": "fillet-muddygravel",
+  "class": "BlockTerrainFillet",
+  "variantgroups": [
+    {
+      "code": "side",
+      "states": [
+        "north",
+        "east",
+        "south",
+        "west"
+      ]
+    }
+  ],
+  "shape": {
+    "format": "obj",
+    "base": "block/terrain-fillet",
+    "rotateYByType": {
+      "*-north": 0,
+      "*-east": 270,
+      "*-south": 180,
+      "*-west": 90
+    }
+  },
+  "drawtype": "json",
+  "blockmaterial": "Soil",
+  "textures": {
+    "obj": {
+      "base": "survival:block/soil/muddygravel"
+    },
+    "all": {
+      "base": "survival:block/soil/muddygravel"
+    },
+    "top": {
+      "base": "survival:block/soil/muddygravel"
+    }
+  },
+  "attributes": {
+    "handbook": {
+      "exclude": true
+    }
+  },
+  "resistance": 2.2,
+  "lightAbsorption": 0,
+  "sideopaque": {
+    "all": false
+  },
+  "sounds": {
+    "place": "block/dirt",
+    "break": "block/dirt",
+    "hit": "block/dirt",
+    "walk": "walk/grass"
+  }
+}
