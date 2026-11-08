@@ -44,6 +44,9 @@
   "drawtype": "json",
   "blockmaterial": "Gravel",
   "textures": {
+    "obj": {
+      "base": "game:block/stone/gravel/{rock}"
+    },
     "all": {
       "base": "game:block/stone/gravel/{rock}"
     },

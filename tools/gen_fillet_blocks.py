@@ -236,17 +236,19 @@ SHAPE = {
 }
 
 
+# The OBJ tesselator resolves an "obj" texture code for the shape itself; without it the
+# game logs a missing mapping and aborts tesselation even when all/top are present.
 def texture_block(family):
     base = {"base": family["texture"]}
     if family.get("grass_overlay"):
         top = {"base": family["texture"], "overlays": [family["grass_overlay"]]}
         return {
             "texturesByType": {
-                "*-none-*": {"all": base, "top": base},
-                "*": {"all": base, "top": top},
+                "*-none-*": {"obj": base, "all": base, "top": base},
+                "*": {"obj": base, "all": base, "top": top},
             }
         }
-    return {"textures": {"all": base, "top": base}}
+    return {"textures": {"obj": base, "all": base, "top": base}}
 
 
 def build_block(family):

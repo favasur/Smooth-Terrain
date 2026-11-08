@@ -54,6 +54,9 @@
   "drawtype": "json",
   "blockmaterial": "Stone",
   "textures": {
+    "obj": {
+      "base": "game:block/stone/rock/{rock}1"
+    },
     "all": {
       "base": "game:block/stone/rock/{rock}1"
     },

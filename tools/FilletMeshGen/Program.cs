@@ -104,8 +104,8 @@ namespace SmoothTerrain.Tools
                 AddQuad(
                     verts, uvs, normals, faces,
                     ref vertexIndex, ref uvIndex, ref normalIndex,
-                    new V3(0, y0, z0), new V3(16, y1, z1), new V3(16, y1, z1), new V3(0, y1, z1),
-                    NormalAtZ(z0), NormalAtZ(z1),
+                    new V3(0, y0, z0), new V3(0, y1, z1), new V3(16, y1, z1), new V3(16, y0, z0),
+                    NormalAtZ(z0), NormalAtZ(z1), NormalAtZ(z1), NormalAtZ(z0),
                     new Uv(0, z0 / Size), new Uv(0, z1 / Size), new Uv(1, z1 / Size), new Uv(1, z0 / Size),
                     "top");
 
@@ -115,16 +115,16 @@ namespace SmoothTerrain.Tools
                     AddQuad(
                         verts, uvs, normals, faces,
                         ref vertexIndex, ref uvIndex, ref normalIndex,
-                        new V3(16, 0, z0), new V3(16, 0, z1), new V3(16, y1, z1), new V3(16, y0, z0),
-                        new V3(1, 0, 0), new V3(1, 0, 0),
-                        new Uv(z0 / Size, 0), new Uv(z1 / Size, 0), new Uv(z1 / Size, y1 / Size), new Uv(z0 / Size, y0 / Size),
+                        new V3(16, 0, z0), new V3(16, y0, z0), new V3(16, y1, z1), new V3(16, 0, z1),
+                        new V3(1, 0, 0), new V3(1, 0, 0), new V3(1, 0, 0), new V3(1, 0, 0),
+                        new Uv(z0 / Size, 0), new Uv(z0 / Size, y0 / Size), new Uv(z1 / Size, y1 / Size), new Uv(z1 / Size, 0),
                         "all");
 
                     AddQuad(
                         verts, uvs, normals, faces,
                         ref vertexIndex, ref uvIndex, ref normalIndex,
                         new V3(0, 0, z0), new V3(0, 0, z1), new V3(0, y1, z1), new V3(0, y0, z0),
-                        new V3(-1, 0, 0), new V3(-1, 0, 0),
+                        new V3(-1, 0, 0), new V3(-1, 0, 0), new V3(-1, 0, 0), new V3(-1, 0, 0),
                         new Uv(z0 / Size, 0), new Uv(z1 / Size, 0), new Uv(z1 / Size, y1 / Size), new Uv(z0 / Size, y0 / Size),
                         "all");
                 }
@@ -134,9 +134,9 @@ namespace SmoothTerrain.Tools
             AddQuad(
                 verts, uvs, normals, faces,
                 ref vertexIndex, ref uvIndex, ref normalIndex,
-                new V3(0, 0, 0), new V3(16, 0, 0), new V3(16, 16, 0), new V3(0, 16, 0),
-                new V3(0, 0, -1), new V3(0, 0, -1),
-                new Uv(0, 0), new Uv(1, 0), new Uv(1, 1), new Uv(0, 1),
+                new V3(0, 0, 0), new V3(0, 16, 0), new V3(16, 16, 0), new V3(16, 0, 0),
+                new V3(0, 0, -1), new V3(0, 0, -1), new V3(0, 0, -1), new V3(0, 0, -1),
+                new Uv(0, 0), new Uv(0, 1), new Uv(1, 1), new Uv(1, 0),
                 "all");
 
             // Bottom face at y = 0.
@@ -144,7 +144,7 @@ namespace SmoothTerrain.Tools
                 verts, uvs, normals, faces,
                 ref vertexIndex, ref uvIndex, ref normalIndex,
                 new V3(0, 0, 0), new V3(16, 0, 0), new V3(16, 0, 16), new V3(0, 0, 16),
-                new V3(0, -1, 0), new V3(0, -1, 0),
+                new V3(0, -1, 0), new V3(0, -1, 0), new V3(0, -1, 0), new V3(0, -1, 0),
                 new Uv(0, 0), new Uv(1, 0), new Uv(1, 1), new Uv(0, 1),
                 "all");
 
@@ -180,8 +180,8 @@ namespace SmoothTerrain.Tools
         }
 
         /// <summary>
-        /// Adds one quad with four vertices, four uvs and two distinct normals (the normal of
-        /// the first edge is used for the first two vertices, the second for the last two).
+        /// Adds one quad with four vertices, four uvs and four normals. The quad is emitted as
+        /// two triangles because Vintage Story's .obj parser only accepts three-vertex faces.
         /// Vertex positions are converted from shape space to the unit-cube space used by .obj
         /// shapes: shape / 16 - 0.5.
         /// </summary>
@@ -199,6 +199,8 @@ namespace SmoothTerrain.Tools
             V3 d,
             V3 n0,
             V3 n1,
+            V3 n2,
+            V3 n3,
             Uv ua,
             Uv ub,
             Uv uc,
@@ -207,7 +209,7 @@ namespace SmoothTerrain.Tools
         {
             V3[] points = { a, b, c, d };
             Uv[] texcoords = { ua, ub, uc, ud };
-            V3[] faceNormals = { n0, n0, n1, n1 };
+            V3[] faceNormals = { n0, n1, n2, n3 };
 
             for (int i = 0; i < 4; i++)
             {
@@ -225,16 +227,21 @@ namespace SmoothTerrain.Tools
             }
 
             faces.Append("usemtl ").Append(material).Append('\n');
-            faces.Append("f ")
-                 .Append(vertexIndex).Append('/').Append(uvIndex).Append('/').Append(normalIndex).Append(' ')
-                 .Append(vertexIndex + 1).Append('/').Append(uvIndex + 1).Append('/').Append(normalIndex + 1).Append(' ')
-                 .Append(vertexIndex + 2).Append('/').Append(uvIndex + 2).Append('/').Append(normalIndex + 2).Append(' ')
-                 .Append(vertexIndex + 3).Append('/').Append(uvIndex + 3).Append('/').Append(normalIndex + 3)
-                 .Append('\n');
+            AppendFace(faces, vertexIndex, uvIndex, normalIndex, 0, 1, 2);
+            AppendFace(faces, vertexIndex, uvIndex, normalIndex, 0, 2, 3);
 
             vertexIndex += 4;
             uvIndex += 4;
             normalIndex += 4;
+        }
+
+        private static void AppendFace(StringBuilder faces, int vertexIndex, int uvIndex, int normalIndex, int a, int b, int c)
+        {
+            faces.Append("f ")
+                 .Append(vertexIndex + a).Append('/').Append(uvIndex + a).Append('/').Append(normalIndex + a).Append(' ')
+                 .Append(vertexIndex + b).Append('/').Append(uvIndex + b).Append('/').Append(normalIndex + b).Append(' ')
+                 .Append(vertexIndex + c).Append('/').Append(uvIndex + c).Append('/').Append(normalIndex + c)
+                 .Append('\n');
         }
 
         private static string F(double value)

@@ -35,6 +35,9 @@
   "blockmaterial": "Soil",
   "texturesByType": {
     "*-none-*": {
+      "obj": {
+        "base": "game:block/soil/cob/normal1"
+      },
       "all": {
         "base": "game:block/soil/cob/normal1"
       },
@@ -43,6 +46,9 @@
       }
     },
     "*": {
+      "obj": {
+        "base": "game:block/soil/cob/normal1"
+      },
       "all": {
         "base": "game:block/soil/cob/normal1"
       },

@@ -33,6 +33,9 @@
   "blockmaterial": "Soil",
   "texturesByType": {
     "*-none-*": {
+      "obj": {
+        "base": "game:block/soil/peat"
+      },
       "all": {
         "base": "game:block/soil/peat"
       },
@@ -41,6 +44,9 @@
       }
     },
     "*": {
+      "obj": {
+        "base": "game:block/soil/peat"
+      },
       "all": {
         "base": "game:block/soil/peat"
       },

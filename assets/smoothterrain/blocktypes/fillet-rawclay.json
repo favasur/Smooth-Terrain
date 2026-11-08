@@ -41,6 +41,9 @@
   "blockmaterial": "Soil",
   "texturesByType": {
     "*-none-*": {
+      "obj": {
+        "base": "game:block/soil/{type}clay"
+      },
       "all": {
         "base": "game:block/soil/{type}clay"
       },
@@ -49,6 +52,9 @@
       }
     },
     "*": {
+      "obj": {
+        "base": "game:block/soil/{type}clay"
+      },
       "all": {
         "base": "game:block/soil/{type}clay"
       },

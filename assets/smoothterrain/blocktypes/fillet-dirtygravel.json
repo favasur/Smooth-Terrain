@@ -42,6 +42,9 @@
   "drawtype": "json",
   "blockmaterial": "Gravel",
   "textures": {
+    "obj": {
+      "base": "game:block/stone/dirtygravel/{moisture}/{type}1"
+    },
     "all": {
       "base": "game:block/stone/dirtygravel/{moisture}/{type}1"
     },

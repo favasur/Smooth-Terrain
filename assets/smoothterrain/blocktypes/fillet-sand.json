@@ -44,6 +44,9 @@
   "drawtype": "json",
   "blockmaterial": "Sand",
   "textures": {
+    "obj": {
+      "base": "game:block/stone/sand/{rock}"
+    },
     "all": {
       "base": "game:block/stone/sand/{rock}"
     },

@@ -25,6 +25,9 @@
   "drawtype": "json",
   "blockmaterial": "Soil",
   "textures": {
+    "obj": {
+      "base": "game:block/soil/sludgygravel"
+    },
     "all": {
       "base": "game:block/soil/sludgygravel"
     },

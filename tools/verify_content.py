@@ -117,8 +117,17 @@ def check_mesh():
         fail("mesh materials are %s, expected ['all', 'top']" % materials)
 
     faces = [line for line in lines if line.startswith("f ")]
-    if len(faces) != 50:
-        fail("mesh has %d faces, expected 50" % len(faces))
+    if len(faces) != 100:
+        fail("mesh has %d faces, expected 100 triangles" % len(faces))
+
+    for face in faces:
+        parts = face.split()
+        if len(parts) != 4:
+            fail("mesh face has %d vertices, expected 3: %s" % (len(parts) - 1, face))
+            break
+        if any(len(part.split("/")) != 3 for part in parts[1:]):
+            fail("mesh face does not use v/vt/vn triples: %s" % face)
+            break
 
 
 def main():

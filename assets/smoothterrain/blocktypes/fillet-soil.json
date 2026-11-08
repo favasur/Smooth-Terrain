@@ -45,6 +45,9 @@
   "blockmaterial": "Soil",
   "texturesByType": {
     "*-none-*": {
+      "obj": {
+        "base": "game:block/soil/fert{fertility}"
+      },
       "all": {
         "base": "game:block/soil/fert{fertility}"
       },
@@ -53,6 +56,9 @@
       }
     },
     "*": {
+      "obj": {
+        "base": "game:block/soil/fert{fertility}"
+      },
       "all": {
         "base": "game:block/soil/fert{fertility}"
       },

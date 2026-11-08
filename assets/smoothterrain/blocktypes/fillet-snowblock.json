@@ -25,6 +25,9 @@
   "drawtype": "json",
   "blockmaterial": "Snow",
   "textures": {
+    "obj": {
+      "base": "game:block/liquid/snow/normal1"
+    },
     "all": {
       "base": "game:block/liquid/snow/normal1"
     },

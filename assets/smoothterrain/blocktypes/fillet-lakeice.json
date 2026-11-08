@@ -25,6 +25,9 @@
   "drawtype": "json",
   "blockmaterial": "Ice",
   "textures": {
+    "obj": {
+      "base": "game:block/liquid/ice/lake1"
+    },
     "all": {
       "base": "game:block/liquid/ice/lake1"
     },
