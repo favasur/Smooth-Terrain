@@ -25,14 +25,11 @@
   "drawtype": "json",
   "blockmaterial": "Snow",
   "textures": {
-    "obj": {
-      "base": "survival:block/liquid/snow/normal1"
-    },
     "all": {
-      "base": "survival:block/liquid/snow/normal1"
+      "base": "game:block/liquid/snow/normal1"
     },
     "top": {
-      "base": "survival:block/liquid/snow/normal1"
+      "base": "game:block/liquid/snow/normal1"
     }
   },
   "attributes": {

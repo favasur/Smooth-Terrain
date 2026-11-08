@@ -44,14 +44,11 @@
   "drawtype": "json",
   "blockmaterial": "Gravel",
   "textures": {
-    "obj": {
-      "base": "survival:block/stone/gravel/{rock}"
-    },
     "all": {
-      "base": "survival:block/stone/gravel/{rock}"
+      "base": "game:block/stone/gravel/{rock}"
     },
     "top": {
-      "base": "survival:block/stone/gravel/{rock}"
+      "base": "game:block/stone/gravel/{rock}"
     }
   },
   "attributes": {

@@ -45,27 +45,21 @@
   "blockmaterial": "Soil",
   "texturesByType": {
     "*-none-*": {
-      "obj": {
-        "base": "survival:block/soil/fert{fertility}"
-      },
       "all": {
-        "base": "survival:block/soil/fert{fertility}"
+        "base": "game:block/soil/fert{fertility}"
       },
       "top": {
-        "base": "survival:block/soil/fert{fertility}"
+        "base": "game:block/soil/fert{fertility}"
       }
     },
     "*": {
-      "obj": {
-        "base": "survival:block/soil/fert{fertility}"
-      },
       "all": {
-        "base": "survival:block/soil/fert{fertility}"
+        "base": "game:block/soil/fert{fertility}"
       },
       "top": {
-        "base": "survival:block/soil/fert{fertility}",
+        "base": "game:block/soil/fert{fertility}",
         "overlays": [
-          "survival:block/plant/grasscoverage/{grasscoverage}"
+          "game:block/plant/grasscoverage/{grasscoverage}"
         ]
       }
     }

@@ -25,14 +25,11 @@
   "drawtype": "json",
   "blockmaterial": "Ice",
   "textures": {
-    "obj": {
-      "base": "survival:block/liquid/ice/packedglacier1"
-    },
     "all": {
-      "base": "survival:block/liquid/ice/packedglacier1"
+      "base": "game:block/liquid/ice/packedglacier1"
     },
     "top": {
-      "base": "survival:block/liquid/ice/packedglacier1"
+      "base": "game:block/liquid/ice/packedglacier1"
     }
   },
   "attributes": {

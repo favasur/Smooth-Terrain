@@ -41,27 +41,21 @@
   "blockmaterial": "Soil",
   "texturesByType": {
     "*-none-*": {
-      "obj": {
-        "base": "survival:block/soil/{type}clay"
-      },
       "all": {
-        "base": "survival:block/soil/{type}clay"
+        "base": "game:block/soil/{type}clay"
       },
       "top": {
-        "base": "survival:block/soil/{type}clay"
+        "base": "game:block/soil/{type}clay"
       }
     },
     "*": {
-      "obj": {
-        "base": "survival:block/soil/{type}clay"
-      },
       "all": {
-        "base": "survival:block/soil/{type}clay"
+        "base": "game:block/soil/{type}clay"
       },
       "top": {
-        "base": "survival:block/soil/{type}clay",
+        "base": "game:block/soil/{type}clay",
         "overlays": [
-          "survival:block/plant/grasscoverage/{grasscoverage}"
+          "game:block/plant/grasscoverage/{grasscoverage}"
         ]
       }
     }

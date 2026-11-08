@@ -23,6 +23,11 @@ namespace SmoothTerrain
         private readonly ConcurrentQueue<Vec2i> pendingChunks = new ConcurrentQueue<Vec2i>();
         private int offsetsRadius = -1;
 
+        // Smoothing must not edit blocks while the client is still building its texture
+        // atlases. The queue collects chunks during loading; the tick listener starts
+        // draining it only once a player is actually in the world.
+        private bool worldReady;
+
         private struct BlockOffset
         {
             public int Dx;
@@ -65,6 +70,7 @@ namespace SmoothTerrain
             // player walking into it or on running a command. The queue is drained gradually
             // by the same tick listener that keeps the area around players up to date.
             api.Event.ChunkColumnLoaded += OnChunkColumnLoaded;
+            api.Event.PlayerNowPlaying += OnPlayerNowPlaying;
 
             api.Event.RegisterGameTickListener(OnServerTick, GameMath.Clamp(config.TickIntervalMs, 50, 10000));
         }
@@ -73,6 +79,15 @@ namespace SmoothTerrain
         {
             if (config == null || !config.Enabled) return;
             pendingChunks.Enqueue(chunkCoord);
+        }
+
+        private void OnPlayerNowPlaying(IServerPlayer player)
+        {
+            if (worldReady) return;
+
+            worldReady = true;
+            if (config.Enabled) EnqueueLoadedChunksAroundPlayers();
+            sapi.Logger.Notification("[smoothterrain] world ready, starting the smoothing queue");
         }
 
         private TextCommandResult OnSmoothCommand(IServerPlayer player, CmdArgs cmdArgs)
@@ -244,7 +259,17 @@ namespace SmoothTerrain
 
         private void OnServerTick(float dt)
         {
-            if (!config.Enabled || sapi == null) return;
+            if (!config.Enabled || sapi == null)
+            {
+                return;
+            }
+
+            // Do not touch blocks while the client is still loading assets and composing
+            // texture atlases. The chunk queue keeps filling up and is drained afterwards.
+            if (!worldReady)
+            {
+                return;
+            }
 
             IBlockAccessor ba = sapi.World.BlockAccessor;
             SmoothQueuedChunks(ba);

@@ -25,14 +25,11 @@
   "drawtype": "json",
   "blockmaterial": "Ice",
   "textures": {
-    "obj": {
-      "base": "survival:block/liquid/ice/lake1"
-    },
     "all": {
-      "base": "survival:block/liquid/ice/lake1"
+      "base": "game:block/liquid/ice/lake1"
     },
     "top": {
-      "base": "survival:block/liquid/ice/lake1"
+      "base": "game:block/liquid/ice/lake1"
     }
   },
   "attributes": {

@@ -44,14 +44,11 @@
   "drawtype": "json",
   "blockmaterial": "Sand",
   "textures": {
-    "obj": {
-      "base": "survival:block/stone/sand/{rock}"
-    },
     "all": {
-      "base": "survival:block/stone/sand/{rock}"
+      "base": "game:block/stone/sand/{rock}"
     },
     "top": {
-      "base": "survival:block/stone/sand/{rock}"
+      "base": "game:block/stone/sand/{rock}"
     }
   },
   "attributes": {

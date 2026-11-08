@@ -42,14 +42,11 @@
   "drawtype": "json",
   "blockmaterial": "Gravel",
   "textures": {
-    "obj": {
-      "base": "survival:block/stone/dirtygravel/{moisture}/{type}1"
-    },
     "all": {
-      "base": "survival:block/stone/dirtygravel/{moisture}/{type}1"
+      "base": "game:block/stone/dirtygravel/{moisture}/{type}1"
     },
     "top": {
-      "base": "survival:block/stone/dirtygravel/{moisture}/{type}1"
+      "base": "game:block/stone/dirtygravel/{moisture}/{type}1"
     }
   },
   "attributes": {

@@ -25,14 +25,11 @@
   "drawtype": "json",
   "blockmaterial": "Soil",
   "textures": {
-    "obj": {
-      "base": "survival:block/soil/bony/normal1"
-    },
     "all": {
-      "base": "survival:block/soil/bony/normal1"
+      "base": "game:block/soil/bony/normal1"
     },
     "top": {
-      "base": "survival:block/soil/bony/normal1"
+      "base": "game:block/soil/bony/normal1"
     }
   },
   "attributes": {

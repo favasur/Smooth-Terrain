@@ -25,14 +25,11 @@
   "drawtype": "json",
   "blockmaterial": "Soil",
   "textures": {
-    "obj": {
-      "base": "survival:block/soil/muddygravel"
-    },
     "all": {
-      "base": "survival:block/soil/muddygravel"
+      "base": "game:block/soil/muddygravel"
     },
     "top": {
-      "base": "survival:block/soil/muddygravel"
+      "base": "game:block/soil/muddygravel"
     }
   },
   "attributes": {
